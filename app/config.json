@@ -1,0 +1,37 @@
+{
+	"dbpath": "../db/dblog.sqlite",
+	"users":[
+		{
+			"username": "admin",
+			"passwd": "admin",
+			"roles": [
+				"admin"
+			]
+		},
+		{
+			"username": "user",
+			"passwd": "user",
+			"roles": [
+				"client"
+			]
+		}
+	],
+	"masters": [
+		"http://translatetool-master.local"
+	],
+	"exports": [
+		{
+			"adapter": "json",
+			"path": "{doc_root}/translation.json"
+		},
+		{
+			"adapter": "yaml",
+			"path": "{doc_root}/translation.yml"
+		}
+	],
+	"fields":[
+		"key TEXT",
+		"value TEXT",
+		"parent_id INT"
+	]
+}
