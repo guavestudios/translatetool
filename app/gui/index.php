@@ -27,7 +27,7 @@ Flight::route('/key/@keyId', array('controller','key'));
 
 Flight::route('POST /add/folder', array('controller','addFolder'));
 
-Flight::route('/export/@format', array('controller','export'));
+Flight::route('/export', array('controller','export'));
 Flight::route('/delete/@keyId/@active', array('controller','deleteKey'));
 
 class controller{
@@ -94,12 +94,14 @@ class controller{
 		}
 	}
 	
-	public static function export($format){
+	public static function export(){
 		$converter = new converter();
-		$output = $converter->save($format, translations::getTree(true));
-		header("Content-Type: {$output['meta']['mime']}");
-		echo $output['file'];
-		exit;
+		foreach(config::get('exports') as $export){
+			$output = $converter->save($export['adapter'], translations::getTree(true));
+			$savePath = str_replace("{doc_root}", $_SERVER['DOCUMENT_ROOT'], $export['path']);
+			file_put_contents($savePath, $output['file']);
+		}
+		echo 'done';
 	}
 	
 	public static function login(){
@@ -128,7 +130,6 @@ class controller{
 				}
 				$response = self::post($masters.$_SERVER['REQUEST_URI'].'?apicall=true', $_POST);
 				$result = explode("\r\n", $response);
-				die($response);
 			}
 		}
 		return true;

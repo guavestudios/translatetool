@@ -46,8 +46,6 @@
 		<?php endif; ?>
 		<br>
 		<br>
-		<h1>Export</h1>
-		<a href="/export/json">As JSON</a><br>
-		<a href="/export/yaml">As YAML</a><br>
+		<a href="/export">Export</a><br>
 	</div>
 </div>
