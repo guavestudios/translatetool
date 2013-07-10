@@ -1,4 +1,7 @@
 RewriteEngine On
+
+RewriteRule ^$ /overview [R,L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ gui/index.php [QSA,L]

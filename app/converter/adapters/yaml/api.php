@@ -10,9 +10,10 @@ class yaml{
 	
 	public function save($content){
 		return array(
-			'file' =>YamlParser::dump($content),
+			'file' =>YamlParser::dump($content, 999),
 			'meta' => array(
-				'extension' => 'yml'
+				'extension' => 'yml',
+				'mime' => 'text/plain'
 			)
 		);
 	}

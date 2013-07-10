@@ -13,7 +13,10 @@
 				<?php foreach($keys as $key): ?>
 					<input type="text" name="key[]" value="<?= $key['key']; ?>"> 
 					<input type="text" name="value[]" value="<?= $key['value']; ?>" class="value">
-					<input type="hidden" name="id[]" value="<?= $key['id']; ?>">
+					<input type="hidden" name="id[]" value="<?= $key['id']; ?>"> 
+					<a href="/delete/<?= $key['id']; ?>/<?= $active ?>" onClick="return confirm('Wirklich löschen?')" tabindex="-1">
+						<img src="/gui/images/delete.png" border="0">
+					</a>
 					<br>
 				<?php endforeach; ?>
 				<input type="text" name="key[]" value="" placeholder="Key" class="key"> 
@@ -21,7 +24,7 @@
 				<input type="hidden" name="id[]" value="">
 				<br>
 			</div>
-			<input type="submit" value="Speichern"> (CTRL + S)
+			<input type="submit" value="Speichern"> (CTRL + S) - Leere Einträge werden nicht gespeichert.
 			</form>
 			<br>
 			<br>
@@ -41,5 +44,10 @@
 				<input type="submit" value="Erstellen">
 			</form>
 		<?php endif; ?>
+		<br>
+		<br>
+		<h1>Export</h1>
+		<a href="/export/json">As JSON</a><br>
+		<a href="/export/yaml">As YAML</a><br>
 	</div>
 </div>

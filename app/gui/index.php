@@ -3,13 +3,40 @@
 require 'php/flight/Flight.php';
 require 'php/auth.class.php';
 require 'php/translations.class.php';
+require 'php/curl.class.php';
 require '../config.class.php';
+require '../converter/convert.class.php';
+
+use Guave\translatetool\converter;
 
 date_default_timezone_set("Europe/Zurich");
+
+Flight::set('mastersedRoutes', array(
+	'POST /add/folder',
+	'/delete/@keyId/@active',
+	'POST /key/@keyId'
+));
 
 Flight::before('route', function(&$params, &$output){
 	if(!auth::ed() and $params[0] != '/login' and $params[0] != 'POST /login'){
 		controller::redirect('/login');
+	}
+});
+
+Flight::before('route', function(&$params, &$output){
+	if(in_array($params[0], Flight::get('mastersedRoutes')) and (strstr($params[0], 'POST') and !empty($_POST))){
+		$c = new Curl();
+		$masters = config::get('masters');
+		if($masters){
+			foreach($masters as $masters){
+				if(strstr($masters, $_SERVER['HTTP_HOST'])){
+					throw new Exception("You might be trying to use your own server as master. That would probably not be a good idea. ({$masters})");
+				}
+				$c->header(true);
+				$response = $c->post($masters.$_SERVER['REQUEST_URI'], $_POST);
+				die(reset(explode("\r\n", $response)));
+			}
+		}
 	}
 });
 
@@ -23,6 +50,9 @@ Flight::route('/key/@keyId', array('controller','key'));
 
 Flight::route('POST /add/folder', array('controller','addFolder'));
 
+Flight::route('/export/@format', array('controller','export'));
+Flight::route('/delete/@keyId/@active', array('controller','deleteKey'));
+
 class controller{
 
 	public static function addFolder(){
@@ -34,6 +64,11 @@ class controller{
 			)
 		));
 		self::redirect('/key/'.translations::insertId());
+	}
+	
+	public static function deleteKey($keyId, $active){
+		translations::deleteRow($keyId);
+		self::redirect('/key/'.$active);
 	}
 
 	public static function key($keyId){
@@ -77,6 +112,14 @@ class controller{
 		}else{
 			self::redirect('/login');
 		}
+	}
+	
+	public static function export($format){
+		$converter = new converter();
+		$output = $converter->save($format, translations::getTree(true));
+		header("Content-Type: {$output['meta']['mime']}");
+		echo $output['file'];
+		exit;
 	}
 	
 	public static function login(){

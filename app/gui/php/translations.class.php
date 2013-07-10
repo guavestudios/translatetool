@@ -73,7 +73,7 @@ class translations{
 		return $result;
 	}
 	
-	public static function getTree($root = 0){
+	public static function getTree($plain = false, $root = 0){
 		$all = self::get(array(), array('value','key'));
 		$assocKeys = array();
 		$rootKeys = array();
@@ -85,7 +85,7 @@ class translations{
 			}
 		}
 		
-		$tree = self::buildTree($rootKeys, $assocKeys);
+		$tree = self::buildTree($rootKeys, $assocKeys, $plain);
 		return $tree;
 	}
 	
@@ -111,14 +111,22 @@ class translations{
 		return $result;
 	}
 	
-	private static function buildTree($keys, &$assocKeys){
+	private static function buildTree($keys, &$assocKeys, $plain){
 		$treePart = array();
 		foreach($keys as $key){
 			if($key['value'] === null){
 				$subtree = isset($assocKeys[$key['id']]) ? $assocKeys[$key['id']] : array();
-				$treePart[$key['key']] = array('value' => false, 'content' => $key, 'children' => self::buildTree($subtree, $assocKeys));
+				if($plain){
+					$treePart[$key['key']] = self::buildTree($subtree, $assocKeys, $plain);
+				}else{
+					$treePart[$key['key']] = array('value' => false, 'content' => $key, 'children' => self::buildTree($subtree, $assocKeys, $plain));
+				}
 			}else{
-				$treePart[$key['key']] = array('value' => true, 'content' => $key);
+				if($plain){
+					$treePart[$key['key']] = $key['value'];
+				}else{
+					$treePart[$key['key']] = array('value' => true, 'content' => $key);
+				}
 			}
 		}
 		return $treePart;

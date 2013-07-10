@@ -8,7 +8,8 @@ class json{
 		return array(
 			'file' =>json_encode($content),
 			'meta' => array(
-				'extension' => 'json'
+				'extension' => 'json',
+				'mime' => 'application/json'
 			)
 		);
 	}
