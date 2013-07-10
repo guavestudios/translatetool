@@ -1,6 +1,6 @@
 <?php
 
-class log{
+class translations{
 	
 	private static $sql = null;
 	private static $config = null;
@@ -29,7 +29,7 @@ class log{
 	
 	public static function get($array = array(), $orderBy = array()){
 		$select = empty($array) ? '*' : implode(",", array_unique(array_merge($array, array('id'))));
-		$order = empty($orderBy) ? 'id DESC' : implode(",", $order);
+		$order = empty($orderBy) ? 'id DESC' : implode(",", $orderBy);
 		$results = self::qry("
 			SELECT
 				{$select}
@@ -43,6 +43,48 @@ class log{
 			$result[] = $r;
 		}
 		return $result;
+	}
+	
+	public static function getTree($root = 0){
+		$all = self::get(array(), array('key'));
+		$assocKeys = array();
+		$rootKeys = array();
+		foreach($all as $key){
+			if($key['parent_id'] > 0){
+				$assocKeys[$key['parent_id']][] = $key;
+			}else{
+				$rootKeys[] = $key;
+			}
+		}
+		
+		$tree = self::buildTree($rootKeys, $assocKeys);
+		return $tree;
+	}
+	
+	private static function buildTree($keys, &$assocKeys){
+		$treePart = array();
+		foreach($keys as $key){
+			if($key['value'] == null){
+				$treePart[$key['key']] = self::buildTree($assocKeys[$key['id']], $assocKeys);
+			}else{
+				$treePart[$key['key']] = $key['value'];
+			}
+		}
+		return $treePart;
+	}
+	
+	public static function getTreeHtml($tree){
+		$html = '<ul>';
+		foreach($tree as $key => $value){
+			if(is_array($value)){
+				$subtree = self::getTreeHtml($value);
+				$html .= '<li>'.$key.$subtree.'</li>';
+			}else{
+				$html .= '<li>'.$key.'</li>';
+			}
+		}
+		$html .= '</ul>';
+		return $html;
 	}
 
 	public static function getOne($id){
