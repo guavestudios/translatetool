@@ -11,7 +11,11 @@ class translations{
 		foreach($array as $row){
 			$qryStringPrep = array();
 			foreach($row as $item){
-				$item = (is_numeric($item)) ? $item : "'".self::getSql()->escapeString($item)."'";
+				if($item === null){
+					$item = 'NULL';
+				}else{
+					$item = (is_numeric($item)) ? $item : "'".self::getSql()->escapeString($item)."'";
+				}
 				$qryStringPrep[] = $item;
 			}
 
@@ -25,6 +29,30 @@ class translations{
 				)
 			");
 		}
+	}
+	
+	public static function update($id, $values){
+		$qryStringPrep = array();
+		
+		foreach($values as $key => $value){
+			$valuePrep = is_numeric($value) ? $value : "'".$value."'";
+			$qryStringPrep[] = "{$key} = {$valuePrep}";
+		}
+
+		self::qry("
+			UPDATE log SET ".implode(", ", $qryStringPrep)." WHERE id = {$id}
+		");
+	}
+	
+	public static function deleteRow($id){
+		if(!is_numeric($id)){
+			throw new Exception("ID is not numeric (given: '{$id}')");
+		}
+		self::qry("DELETE FROM log WHERE id = {$id}");
+	}
+	
+	public static function insertId(){
+		return self::getSql()->lastInsertRowid();
 	}
 	
 	public static function get($array = array(), $orderBy = array()){
@@ -46,7 +74,7 @@ class translations{
 	}
 	
 	public static function getTree($root = 0){
-		$all = self::get(array(), array('key'));
+		$all = self::get(array(), array('value','key'));
 		$assocKeys = array();
 		$rootKeys = array();
 		foreach($all as $key){
@@ -61,26 +89,52 @@ class translations{
 		return $tree;
 	}
 	
+	public static function getValues($keyId){
+		$results = self::qry("
+			SELECT
+				*
+			FROM
+				log
+			WHERE
+				parent_id = {$keyId}
+			AND
+				value IS NOT NULL
+			ORDER BY
+				key
+		");
+		$result = array();
+		if($results){
+			while($r = $results->fetchArray(self::$sql_mode)){
+				$result[] = $r;
+			}
+		}
+		return $result;
+	}
+	
 	private static function buildTree($keys, &$assocKeys){
 		$treePart = array();
 		foreach($keys as $key){
-			if($key['value'] == null){
-				$treePart[$key['key']] = self::buildTree($assocKeys[$key['id']], $assocKeys);
+			if($key['value'] === null){
+				$subtree = isset($assocKeys[$key['id']]) ? $assocKeys[$key['id']] : array();
+				$treePart[$key['key']] = array('value' => false, 'content' => $key, 'children' => self::buildTree($subtree, $assocKeys));
 			}else{
-				$treePart[$key['key']] = $key['value'];
+				$treePart[$key['key']] = array('value' => true, 'content' => $key);
 			}
 		}
 		return $treePart;
 	}
 	
-	public static function getTreeHtml($tree){
+	public static function getTreeHtml($active = 0, $tree = null){
+		if($tree === null){
+			$tree = self::getTree();
+		}
 		$html = '<ul>';
 		foreach($tree as $key => $value){
-			if(is_array($value)){
-				$subtree = self::getTreeHtml($value);
-				$html .= '<li>'.$key.$subtree.'</li>';
+			if(!isset($value['children'])){
+				$html .= '<li class="'.($value['content']['id'] == $active ? 'active' : '').'">'.$value['content']['key'].'</li>';
 			}else{
-				$html .= '<li>'.$key.'</li>';
+				$subtree = self::getTreeHtml($active, $value['children']);
+				$html .= '<li class="'.($value['content']['id'] == $active ? 'active' : '').'"><a href="/key/'.$value['content']['id'].'">'.$key.'</a>'.$subtree.'</li>';				
 			}
 		}
 		$html .= '</ul>';

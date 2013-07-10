@@ -72,6 +72,10 @@ a:hover{
 }
 .box .treeInner li{
 	font-size: 14px;
+	font-weight: 400;
+}
+.box .treeInner li.active{
+	font-weight: 700;
 }
 .box .treeText{
 	width: 756px;
@@ -90,4 +94,7 @@ input:hover{
 input[type=submit]:active,
 input[type=button]:active{
 	background-color: #E0E0E0;
+}
+input.value{
+	width: 400px;
 }
