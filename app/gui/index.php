@@ -117,6 +117,9 @@ class controller{
 	}
 	
 	private static function mirror(){
+		if(isset($_GET['apicall'])){
+			return false;
+		}
 		$masters = config::get('masters');
 		if($masters){
 			foreach($masters as $masters){
@@ -128,6 +131,7 @@ class controller{
 				die($response);
 			}
 		}
+		return true;
 	}
 	
 	private static function post($url, $post = array()){
