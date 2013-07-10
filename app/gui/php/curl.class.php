@@ -1,263 +1,516 @@
 <?php
+/**
+ * @author Dick Munroe (munroe@csworks.com)
+ * @copyright copyright @ 2004-2007, Dick Munroe, released under the GPL.
+ * @license http://www.csworks.com/publications/ModifiedNetBSD.html
+ * @version 1.2.0
+ * @package cURL
+ *
+ * The cURL class is a thin wrapper around the procedural interface
+ * to cURL provided by PHP.  I use it mostly as a base class for
+ * web services whose low level interface is, literally, web pages.
+ *
+ * There are a few differences (value added, I guess) between the interface
+ * provided by this class and the procedural cURL interface.  Most
+ * noticable are:
+ *
+ *  1. The curl::exec function (when returning data to the caller rather
+ *     than simply outputing it) always parses the HTTP header and returns
+ *     only the body portion of the reqeust.  The header is available via
+ *     the curl::getHeader method.
+ *  2. The status of the last curl::exec is always maintained.  It is
+ *     available via the curl::getStatus method.  In addition to the information
+ *     returned by curl_getinfo, that of curl_error and curl_errno is folded
+ *     in as well.
+ *
+ * @example ./example.class.curl.php
+ */
 
-class Curl {
-	
-    public $curl;
-    public $manual_follow;
-    public $redirect_url;
-    public $cookiefile = null;
-    public $headers = array();
+//
+// Edit History:
+//
+//  Dick Munroe munroe@csworks.com 30-Nov-2004
+//      Initial Version Created.
+//
+//  Dick Munroe munroe@csworks.com 01-Dec-2004
+//      Forgot to check for cURL actually being in this instance of PHP.
+//
+//  Dick Munroe (munroe@csworks.com) 07-Apr-2006
+//      Fix tab characters.
+//      Add utility function to return post string.
+//
+//  Richard W. Schlatter (richard@rth10260.info) 27-Apr-2006
+//      Extend processing for headers when CURLOPT_FOLLOWLOCATION is also set.
+//      Only the headers of the final page will be used to return parsed headers.
+//      Add utility function to return array of all collected headers.
+//
+//  Dick Munroe (munroe@csworks.com) 01-May-2006
+//      asPostString doesn't need to be an object specific method.
+//
+//  Dick Munroe (munroe@csworks.com) 02-May-2006
+//      Not all versions of PHP allow returning of a reference to the result
+//      of a function.
+//
+//  Richard W. Schlatter (richard@rth10260.info) 03-May-2006
+//      For consistency, return an empty array if there aren't any headers
+//      to be parsed.
+//
+//  Richard W. Schlatter (richard@rth10260.info) 05-Jun-2006
+//      Don't parse headers in the event of an error when executing a cURL request.
+//
+//  Dick Munroe (munroe@csworks.com) 17-Dec-2007 1.2.0
+//      Add a function to parse post strings as this is frequently needed capability.
 
-    function Curl() {
-        $this->curl = curl_init();
-        $this->headers[] = "Accept: */*";
-        $this->headers[] = "Cache-Control: max-age=0";
-        $this->headers[] = "Connection: keep-alive";
-        $this->headers[] = "Keep-Alive: 300";
-        $this->headers[] = "Accept-Charset: utf-8;ISO-8859-1;iso-8859-2;q=0.7,*;q=0.7";
-        $this->headers[] = "Accept-Language: en-us,en;q=0.5";
-        $this->headers[] = "Pragma: "; // browsers keep this blank.
+class curl
+{
+	/**
+	 * The mapping to caseless header names.
+	 *
+	 * @access private
+	 * @var array
+	 */
 
-        
-        curl_setopt($this->curl, CURLOPT_USERAGENT, 'User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.0; en-GB; rv:1.9.0.14) Gecko/2009082707 Firefox/3.0.14 (.NET CLR 3.5.30729)');
-        curl_setopt($this->curl, CURLOPT_HTTPHEADER, $this->headers);
-        curl_setopt($this->curl, CURLOPT_VERBOSE, false);
-        curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-        curl_setopt($this->curl, CURLOPT_ENCODING, 'gzip,deflate');
-        curl_setopt($this->curl, CURLOPT_AUTOREFERER, true);
-        
-        if (ini_get('open_basedir') == '' && ini_get('safe_mode' == 'Off')){
-            curl_setopt($this->curl, CURLOPT_FOLLOWLOCATION, true);
-        } else {
-            $this->manual_follow = true;
-        }
-        
-        curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($this->curl, CURLOPT_HEADER, false);
-        curl_setopt($this->curl, CURLOPT_TIMEOUT, 0);
-    
-        $this->setRedirect();
-    }
-    
-    function addHeader($header){
-        $this->headers[] = $header;
-        curl_setopt($this->curl, CURLOPT_HTTPHEADER, $this->headers);        
-    }
-    
-    function header($val){
-        curl_setopt($this->curl, CURLOPT_HEADER, $val);
-    }
-    
-    function noAjax(){
-        foreach($this->headers as $key => $val){
-            if ($val == "X-Requested-With: XMLHttpRequest"){
-                unset($this->headers[$key]);
-            }
-        }
-        curl_setopt($this->curl, CURLOPT_HTTPHEADER, $this->headers);
-    }
-    
-    function setAjax(){
-        $this->headers[] = "X-Requested-With: XMLHttpRequest";
-        curl_setopt($this->curl, CURLOPT_HTTPHEADER, $this->headers);
-    }
-    
-    function setSsl($username = null, $password = null){
-        curl_setopt($this->curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($this->curl, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($this->curl, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-        if ($username && $password){
-            curl_setopt($this->curl, CURLOPT_USERPWD, "$username:$password");        
-        }    
-    }
-    
-    function setBasicAuth($username,$password){
-        curl_setopt($this->curl, CURLOPT_HEADER, false);
-        curl_setopt($this->curl, CURLOPT_USERPWD, "$username:$password");    
-    }
+	var $m_caseless ;
 
-    
-    function setCookieFile($file){
-        if (file_exists($file)) {
-            
-        } else {
-            $handle = fopen($file, 'w+') or print('The cookie file could not be opened. Make sure this directory has the correct permissions');
-            fclose($handle);
-        }
-        curl_setopt($this->curl, CURLOPT_COOKIESESSION, true);
-        curl_setopt($this->curl, CURLOPT_COOKIEJAR, $file);
-        curl_setopt($this->curl, CURLOPT_COOKIEFILE, $file);
-        $this->cookiefile = $file;
-    }
-    
-    function getCookies(){
-          $contents = file_get_contents($this->cookiefile);
-          $cookies = array();
-          if ($contents){
-            $lines = explode("\n",$contents);
-            if (count($lines)){
-                  foreach($lines as $key=>$val){
-                    $tmp = explode("\t",$val);
-                    if (count($tmp)>3){
-                          $tmp[count($tmp)-1] = str_replace("\n","",$tmp[count($tmp)-1]);
-                          $tmp[count($tmp)-1] = str_replace("\r","",$tmp[count($tmp)-1]);
-                          $cookies[$tmp[count($tmp)-2]]=$tmp[count($tmp)-1];
-                    }
-                  }
-            }
-          }
-          return $cookies;
-    }
+	/**
+	 * The handle for the current curl session.
+	 *
+	 * @access private
+	 * @var resource
+	 */
 
-    function setDataMode($val){
-         curl_setopt($this->curl, CURLOPT_BINARYTRANSFER, $val);
-    }
-    
-    function close() {
-          curl_close($this->curl);
-    }
-    
-    function getInfo(){
-          return curl_getinfo($this->curl);
-    }
-    
-    function getInstance() {
-        static $instance;
-        if (!isset($instance)) {
-            $curl = new Curl;
-            $instance = array($curl);
-        }
-        return $instance[0];
-    }
+	var $m_handle ;
 
-    function setTimeout($connect, $transfer) {
-        curl_setopt($this->curl, CURLOPT_CONNECTTIMEOUT, $connect);
-        curl_setopt($this->curl, CURLOPT_TIMEOUT, $transfer);
-    }
+	/**
+	 * The parsed contents of the HTTP header if one happened in the
+	 * message.  All repeated elements appear as arrays.
+	 *
+	 * The headers are stored as an associative array, the key of which
+	 * is the name of the header, e.g., Set-Cookie, and the values of which
+	 * are the bodies of the header in the order in which they occurred.
+	 *
+	 * Some headers can be repeated in a single header, e.g., Set-Cookie and
+	 * pragma, so each type of header has an array containing one or more
+	 * headers of the same type.
+	 *
+	 * The names of the headers can, potentially, vary in spelling from
+	 * server to server and client to client.  No attempt to regulate this
+	 * is made, i.e., the curl class does not force all headers to lower
+	 * or upper class, but it DOES collect all headers of the same type
+	 * under the spelling of the type of header used by the FIRST header
+	 * of that type.
+	 *
+	 * For example, two headers:
+	 *
+	 *   1. Set-Cookie: ...
+	 *   2. set-cookie: ...
+	 *
+	 * Would appear as $this->m_header['Set-Cookie'][0] and ...[1]
+	 *
+	 * @access private
+	 * @var mixed
+	 */
 
-    function getError() {
-        return curl_errno($this->curl) ? curl_error($this->curl) : false;
-    }
+	var $m_header ;
 
-    function disableRedirect() {
-        $this->setRedirect(false);
-    }
+	/**
+	 * Current setting of the curl options.
+	 *
+	 * @access private
+	 * @var mixed
+	 */
 
-    function setRedirect($enable = true) {
-        if ($enable) {
-            $this->manual_follow = !curl_setopt($this->curl, CURLOPT_FOLLOWLOCATION, true);
-        } else {
-            curl_setopt($this->curl, CURLOPT_FOLLOWLOCATION, false);
-            $this->manual_follow = false;
-        }
-    }
+	var $m_options ;
 
-    function getHttpCode() {
-        return curl_getinfo($this->curl, CURLINFO_HTTP_CODE);
-    }
+	/**
+	 * Status information for the last executed http request.  Includes the errno and error
+	 * in addition to the information returned by curl_getinfo.
+	 *
+	 * The keys defined are those returned by curl_getinfo with two additional
+	 * ones specified, 'error' which is the value of curl_error and 'errno' which
+	 * is the value of curl_errno.
+	 *
+	 * @link http://www.php.net/curl_getinfo
+	 * @link http://www.php.net/curl_errno
+	 * @link http://www.php.net/curl_error
+	 * @access private
+	 * @var mixed
+	 */
 
+	var $m_status ;
 
-    function makeQuery($data) { 
-        if (is_array($data)) {
-            $fields = array();
-            foreach ($data as $key => $value) {
-                 $fields[] = $key . '=' . urlencode($value);
-            }
-            $fields = implode('&', $fields);
-        } else {
-            $fields = $data;
-        }
+	/**
+	 * Collection of headers when curl follows redirections as per CURLOPTION_FOLLOWLOCATION.
+	 * The collection includes the headers of the final page too.
+	 *
+	 * @access private
+	 * @var array
+	 */
 
-        return $fields;
-    }
-    
-    // FOLLOWLOCATION manually if we need to
-    function maybeFollow($page) {
-        if (strpos($page, "\r\n\r\n") !== false) {
-            list($headers, $page) = explode("\r\n\r\n", $page, 2);
-        }       
-        
-        $code = $this->getHttpCode();
-        
-        if ($code > 300 && $code < 310) {  
-            $info = $this->getInfo(); 
-            
-            preg_match("#Location: ?(.*)#i", $headers, $match);
-            $this->redirect_url = trim($match[1]);
-            
-            if (substr_count($this->redirect_url,"http://") == 0 && isset($info['url']) && substr_count($info['url'],"http://")){
-                $url_parts = parse_url($info['url']);
-                if (isset($url_parts['host']) && $url_parts['host']){
-                    $this->redirect_url = "http://".$url_parts['host'].$this->redirect_url;
-                }
-            }
-            
-            if ($this->manual_follow) {
-                return $this->get($this->redirect_url);
-            }
-        } else {
-            $this->redirect_url = '';
-        }
-            
-        return $page;
-    }
-    
-    
-    function plainPost($url,$data){
-        curl_setopt($this->curl, CURLOPT_URL, $url);
-        curl_setopt($this->curl, CURLOPT_POST, true);
-        curl_setopt($this->curl, CURLOPT_POSTFIELDS, $data);
-        
-        $page = curl_exec($this->curl);
-            
-        $error = curl_errno($this->curl);    
-        if ($error != CURLE_OK || empty($page)) {
-            return false;
-        }
+	var $m_followed ;
 
-        curl_setopt($this->curl, CURLOPT_POST, false);
-        curl_setopt($this->curl, CURLOPT_POSTFIELDS, '');
-        
-        return $this->maybeFollow($page);
-    }
-    
-    function post($url, $data) {
-        $fields = $this->makeQuery($data);
-        
-        curl_setopt($this->curl, CURLOPT_URL, $url);
-        curl_setopt($this->curl, CURLOPT_POST, true);
-        curl_setopt($this->curl, CURLOPT_POSTFIELDS, $fields);
-        $page = curl_exec($this->curl);
-            
-        $error = curl_errno($this->curl);    
-        if ($error != CURLE_OK || empty($page)) {
-            return false;
-        }
+	/**
+	 * curl class constructor
+	 *
+	 * Initializes the curl class for it's default behavior:
+	 *  o no HTTP headers.
+	 *  o return the transfer as a string.
+	 *  o URL to access.
+	 * By default, the curl class will simply read the URL provided
+	 * in the constructor.
+	 *
+	 * @link http://www.php.net/curl_init
+	 * @param string $theURL [optional] the URL to be accessed by this instance of the class.
+	 */
 
-        curl_setopt($this->curl, CURLOPT_POST, false);
-        curl_setopt($this->curl, CURLOPT_POSTFIELDS, '');
-        
-        return $this->maybeFollow($page);
-    }
-    
-    function get($url, $data = null) {
-        
-        curl_setopt($this->curl, CURLOPT_FRESH_CONNECT, true);
-        if (!is_null($data)) {
-            $fields = $this->makeQuery($data);
-            $url .= '?' . $fields;
-        }
+	function curl($theURL=null)
+	  {
+		if (!function_exists('curl_init'))
+		  {
+			trigger_error('PHP was not built with --with-curl, rebuild PHP to use the curl class.',
+						  E_USER_ERROR) ;
+		  }
 
-        curl_setopt($this->curl, CURLOPT_URL, $url);
-        $page = curl_exec($this->curl);
-        
-        $error = curl_errno($this->curl);
+		$this->m_handle = curl_init() ;
 
-        if ($error != CURLE_OK || empty($page)) {
-            return false;
-        }
-        
-        return $this->maybeFollow($page);
-    }
+		$this->m_caseless = null ;
+		$this->m_header = null ;
+		$this->m_options = null ;
+		$this->m_status = null ;
+		$this->m_followed = null ;
+
+		if (!empty($theURL))
+		  {
+			$this->setopt(CURLOPT_URL, $theURL) ;
+		  }
+		$this->setopt(CURLOPT_HEADER, false) ;
+		$this->setopt(CURLOPT_RETURNTRANSFER, true) ;
+	  }
+
+	/**
+	 * Free the resources associated with the curl session.
+	 *
+	 * @link http://www.php.net/curl_close
+	 */
+
+	function close()
+	  {
+		curl_close($this->m_handle) ;
+		$this->m_handle = null ;
+	  }
+
+	/**
+	 * Execute the curl request and return the result.
+	 *
+	 * @link http://www.php.net/curl_exec
+	 * @link http://www.php.net/curl_getinfo
+	 * @link http://www.php.net/curl_errno
+	 * @link http://www.php.net/curl_error
+	 * @return string The contents of the page (or other interaction as defined by the
+	 *                settings of the various curl options).
+	 */
+
+	function exec()
+	  {
+		$theReturnValue = curl_exec($this->m_handle) ;
+
+		$this->m_status = curl_getinfo($this->m_handle) ;
+		$this->m_status['errno'] = curl_errno($this->m_handle) ;
+		$this->m_status['error'] = curl_error($this->m_handle) ;
+
+		//
+		// Collect headers espesically if CURLOPT_FOLLOWLOCATION set.
+		// Parse out the http header (from last one if any).
+		//
+
+		$this->m_header = null ;
+
+		//
+		// If there has been a curl error, just return a null string.
+		//
+
+		if ($this->m_status['errno'])
+		{
+		  return '' ;
+		}
+
+		if ($this->getOption(CURLOPT_HEADER))
+		  {
+
+			$this->m_followed = array() ;
+			$rv = $theReturnValue ;
+
+			while (count($this->m_followed) <= $this->m_status['redirect_count'])
+			  {
+				$theArray = preg_split("/(\r\n){2,2}/", $rv, 2) ;
+
+				$this->m_followed[] = $theArray[0] ;
+
+				$rv = $theArray[1] ;
+			  }
+
+			$this->parseHeader($theArray[0]) ;
+
+			return $theArray[1] ;
+		  }
+		else
+		  {
+			return $theReturnValue ;
+		  }
+	  }
+
+	/**
+	 * Returns the parsed http header.
+	 *
+	 * @param string $theHeader [optional] the name of the header to be returned.
+	 *                          The name of the header is case insensitive.  If
+	 *                          the header name is omitted the parsed header is
+	 *                          returned.  If the requested header doesn't exist
+	 *                          false is returned.
+	 * @returns mixed
+	 */
+
+	function getHeader($theHeader=null)
+	  {
+		//
+		// There can't be any headers to check if there weren't any headers
+		// returned (happens in the event of errors).
+		//
+
+		if (empty($this->m_header))
+		{
+		  return false ;
+		}
+
+		if (empty($theHeader))
+		  {
+			return $this->m_header ;
+		  }
+		else
+		  {
+			$theHeader = strtoupper($theHeader) ;
+			if (isset($this->m_caseless[$theHeader]))
+			  {
+				return $this->m_header[$this->m_caseless[$theHeader]] ;
+			  }
+			else
+			  {
+				return false ;
+			  }
+		  }
+	  }
+
+	/**
+	 * Returns the current setting of the request option.  If no
+	 * option has been set, it return null.
+	 *
+	 * @param integer the requested CURLOPT.
+	 * @returns mixed
+	 */
+
+	function getOption($theOption)
+	  {
+		if (isset($this->m_options[$theOption]))
+		  {
+			return $this->m_options[$theOption] ;
+		  }
+
+		return null ;
+	  }
+
+	/**
+	 * Did the last curl exec operation have an error?
+	 *
+	 * @return mixed The error message associated with the error if an error
+	 *               occurred, false otherwise.
+	 */
+
+	function hasError()
+	  {
+		if (isset($this->m_status['error']))
+		  {
+			return (empty($this->m_status['error']) ? false : $this->m_status['error']) ;
+		  }
+		else
+		  {
+			return false ;
+		  }
+	  }
+
+	/**
+	 * Parse an HTTP header.
+	 *
+	 * As a side effect it stores the parsed header in the
+	 * m_header instance variable.  The header is stored as
+	 * an associative array and the case of the headers
+	 * as provided by the server is preserved and all
+	 * repeated headers (pragma, set-cookie, etc) are grouped
+	 * with the first spelling for that header
+	 * that is seen.
+	 *
+	 * All headers are stored as if they COULD be repeated, so
+	 * the headers are really stored as an array of arrays.
+	 *
+	 * @param string $theHeader The HTTP data header.
+	 */
+
+	function parseHeader($theHeader)
+	  {
+		$this->m_caseless = array() ;
+
+		$theArray = preg_split("/(\r\n)+/", $theHeader) ;
+
+		//
+		// Ditch the HTTP status line.
+		//
+
+		if (preg_match('/^HTTP/', $theArray[0]))
+		  {
+			$theArray = array_slice($theArray, 1) ;
+		  }
+
+		foreach ($theArray as $theHeaderString)
+		  {
+			$theHeaderStringArray = preg_split("/\s*:\s*/", $theHeaderString, 2) ;
+
+			$theCaselessTag = strtoupper($theHeaderStringArray[0]) ;
+
+			if (!isset($this->m_caseless[$theCaselessTag]))
+			  {
+				$this->m_caseless[$theCaselessTag] = $theHeaderStringArray[0] ;
+			  }
+
+			$this->m_header[$this->m_caseless[$theCaselessTag]][] = $theHeaderStringArray[1] ;
+		  }
+	  }
+
+	/**
+	 * Return the status information of the last curl request.
+	 *
+	 * @param string $theField [optional] the particular portion
+	 *                         of the status information desired.
+	 *                         If omitted the array of status
+	 *                         information is returned.  If a non-existant
+	 *                         status field is requested, false is returned.
+	 * @returns mixed
+	 */
+
+	function getStatus($theField=null)
+	  {
+		if (empty($theField))
+		  {
+			return $this->m_status ;
+		  }
+		else
+		  {
+			if (isset($this->m_status[$theField]))
+			  {
+				return $this->m_status[$theField] ;
+			  }
+			else
+			  {
+				return false ;
+			  }
+		  }
+	  }
+
+	/**
+	 * Set a curl option.
+	 *
+	 * @link http://www.php.net/curl_setopt
+	 * @param mixed $theOption One of the valid CURLOPT defines.
+	 * @param mixed $theValue the value of the curl option.
+	 */
+
+	function setopt($theOption, $theValue)
+	  {
+		curl_setopt($this->m_handle, $theOption, $theValue) ;
+		$this->m_options[$theOption] = $theValue ;
+	  }
+
+	/**
+	 * @desc Post string as an array
+	 * @param string by reference data to be written.
+	 * @return array hash containing the post string as individual elements, urldecoded.
+	 * @access public
+	 */
+
+	function &fromPostString(&$thePostString)
+	{
+		$return = array() ;
+		$fields = explode('&', $thePostString) ;
+		foreach($fields as $aField)
+		{
+			$xxx = explode('=', $aField) ;
+			$return[$xxx[0]] = urldecode($xxx[1]) ;
+		}
+
+		return $return ;
+	}
+
+	/**
+	 * Arrays are walked through using the key as a the name.  Arrays
+	 * of Arrays are emitted as repeated fields consistent with such things
+	 * as checkboxes.
+	 *
+	 * @desc Return data as a post string.
+	 * @param mixed by reference data to be written.
+	 * @param string [optional] name of the datum.
+	 * @access public
+	 */
+
+	function &asPostString(&$theData, $theName = NULL)
+	  {
+		$thePostString = '' ;
+		$thePrefix = $theName ;
+
+		if (is_array($theData))
+		{
+		  foreach ($theData as $theKey => $theValue)
+		  {
+			if ($thePrefix === NULL)
+		{
+			  $thePostString .= '&' . curl::asPostString($theValue, $theKey) ;
+		}
+		else
+			{
+			  $thePostString .= '&' . curl::asPostString($theValue, $thePrefix . '[' . $theKey . ']') ;
+			}
+		  }
+		}
+		else
+		{
+		  $thePostString .= '&' . urlencode((string)$thePrefix) . '=' . urlencode($theData) ;
+		}
+
+		$xxx =& substr($thePostString, 1) ;
+
+		return $xxx ;
+	  }
+
+	/**
+	 * Returns the followed headers lines, including the header of the retrieved page.
+	 * Assumed preconditions: CURLOPT_HEADER and expected CURLOPT_FOLLOWLOCATION set.
+	 * The content is returned as an array of headers of arrays of header lines.
+	 *
+	 * @param none.
+	 * @returns mixed an empty array implies no headers.
+	 * @access public
+	 */
+
+	function getFollowedHeaders()
+	  {
+		$theHeaders = array() ;
+		if ($this->m_followed)
+		  {
+			foreach ( $this->m_followed as $aHeader )
+			  {
+				$theHeaders[] = explode( "\r\n", $aHeader ) ;
+			  } ;
+			return $theHeaders ;
+		  }
+
+		return $theHeaders ;
+	  }
 }
+?>

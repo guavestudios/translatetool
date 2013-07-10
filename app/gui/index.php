@@ -12,7 +12,7 @@ use Guave\translatetool\converter;
 date_default_timezone_set("Europe/Zurich");
 
 Flight::before('route', function(&$params, &$output){
-	if(!auth::ed() and $_SERVER['REQUEST_URI'] != '/login'){
+	if(!auth::ed() and $_SERVER['REQUEST_URI'] != '/login' and !isset($_GET['apicall'])){
 		controller::redirect('/login');
 	}
 });
@@ -117,18 +117,54 @@ class controller{
 	}
 	
 	private static function mirror(){
-		$c = new Curl();
 		$masters = config::get('masters');
 		if($masters){
 			foreach($masters as $masters){
 				if(strstr($masters, $_SERVER['HTTP_HOST'])){
 					throw new Exception("You might be trying to use your own server as master. That would probably not be a good idea. ({$masters})");
 				}
-				$c->header(true);
-				$response = $c->post($masters.$_SERVER['REQUEST_URI'], $_POST);
-				die(reset(explode("\r\n", $response)));
+				$response = self::post($masters.$_SERVER['REQUEST_URI'].'?apicall=true', $_POST);
+				$result = explode("\r\n", $response);
+				die($response);
 			}
 		}
+	}
+	
+	private static function post($url, $post = array()){
+		if(substr($url, 0, 7)!="http://"){
+			$url = "http://".$url;
+		}
+		$curl = curl_init($url);
+		if(count($post)>0){
+			curl_setopt($curl, CURLOPT_POST, true);
+			curl_setopt($curl, CURLOPT_POSTFIELDS, self::asPostString($_POST));
+		}
+		curl_setopt($curl, CURLOPT_HEADER, true);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		$return = curl_exec($curl);
+		curl_close($curl);
+		return $return;
+	}
+	
+	private static function asPostString($theData, $theName = null){
+		$thePostString = '';
+		$thePrefix = $theName;
+
+		if (is_array($theData)){
+			foreach ($theData as $theKey => $theValue){
+				if ($thePrefix === NULL){
+					$thePostString .= '&' . self::asPostString($theValue, $theKey);
+				}else{
+					$thePostString .= '&' . self::asPostString($theValue, $thePrefix . '[' . $theKey . ']');
+				}
+			}
+		}else{
+			$thePostString .= '&' . urlencode((string)$thePrefix) . '=' . urlencode($theData);
+		}
+
+		$xxx = substr($thePostString, 1);
+
+		return $xxx;
 	}
 	
 }
