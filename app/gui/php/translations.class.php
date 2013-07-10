@@ -55,14 +55,18 @@ class translations{
 		return self::getSql()->lastInsertRowid();
 	}
 	
-	public static function get($array = array(), $orderBy = array()){
+	public static function get($array = array(), $orderBy = array(), $where = null){
 		$select = empty($array) ? '*' : implode(",", array_unique(array_merge($array, array('id'))));
 		$order = empty($orderBy) ? 'id DESC' : implode(",", $orderBy);
+		if($where){
+			$where = "WHERE {$where}";
+		}
 		$results = self::qry("
 			SELECT
 				{$select}
 			FROM
 				log
+			{$where}
 			ORDER BY
 				{$order}
 		");
@@ -142,7 +146,16 @@ class translations{
 				$html .= '<li class="'.($value['content']['id'] == $active ? 'active' : '').'">'.$value['content']['key'].'</li>';
 			}else{
 				$subtree = self::getTreeHtml($active, $value['children']);
-				$html .= '<li class="'.($value['content']['id'] == $active ? 'active' : '').'"><a href="/key/'.$value['content']['id'].'">'.$key.'</a>'.$subtree.'</li>';				
+				$html .= '<li class="'.($value['content']['id'] == $active ? 'active' : '').'">'
+						.'<span class="row"><a href="/key/'.$value['content']['id'].'">'.$key.'</a>';
+				if(auth::has('admin')){
+				$html .= '<span class="hovermenu">'
+						.'<a href="/add/folder/'.$value['content']['id'].'"><img src="/gui/images/add-icon.png" height="14"></a>'
+						.'<a href="/edit/folder/'.$value['content']['id'].'"><img src="/gui/images/edit-icon.png" height="14"></a>'
+						.'<a href="/del/folder/'.$value['content']['id'].'" onClick="return confirm(\'Wirklich löschen?\')"><img src="/gui/images/delete-icon.png" height="14"></a>'
+						.'</span>';
+				}
+				$html .= '</span>'.$subtree.'</li>';
 			}
 		}
 		$html .= '</ul>';

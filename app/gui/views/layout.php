@@ -30,7 +30,22 @@
 	</head>
 	<body>
 		<div id="wrapper">
-			<?= $body_content ?>
+			<div class="box clearfix">
+				<div class="title">GUAVE Übersetzungen</div>
+				<div class="tree">
+					<div class="treeInner">
+						<ul>
+							<li>
+								<a href="/overview">Home</a>
+								<?php echo translations::getTreeHtml($active); ?>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<div class="treeText">
+					<?= $body_content ?>
+				</div>
+			</div>
 		</div>
 	</body>
 </html>

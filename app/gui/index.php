@@ -26,6 +26,10 @@ Flight::route('POST /key/@keyId', array('controller','saveKeys'));
 Flight::route('/key/@keyId', array('controller','key'));
 
 Flight::route('POST /add/folder', array('controller','addFolder'));
+Flight::route('/add/folder/@parentId', array('controller','showAddFolder'));
+Flight::route('POST /edit/folder', array('controller','editFolder'));
+Flight::route('/edit/folder/@editId', array('controller','showEditFolder'));
+Flight::route('/del/folder/@delId', array('controller','delFolder'));
 
 Flight::route('/export', array('controller','export'));
 Flight::route('/delete/@keyId/@active', array('controller','deleteKey'));
@@ -42,6 +46,40 @@ class controller{
 			)
 		));
 		self::redirect('/key/'.translations::insertId());
+	}
+	
+	public static function editFolder(){
+		self::mirror();
+		translations::update($_POST['parent_id'],
+			array(
+				'key' => $_POST['foldername']
+			)
+		);
+		self::redirect('/key/'.$_POST['parent_id']);
+	}
+	
+	public static function delFolder($delId){
+		self::recursiveDelete($delId);
+		self::redirect('/overview');
+	}
+	
+	private static function recursiveDelete($delId){
+		$items = translations::get(array(),array(),"parent_id = {$delId}");
+		if(!empty($items)){
+			foreach($items as $item){
+				self::recursiveDelete($item['id']);
+			}
+		}
+		translations::deleteRow($delId);
+	}
+	
+	public static function showAddFolder($parentId){
+		self::render('editfolder', array('active' => $parentId));
+	}
+	
+	public static function showEditFolder($editId){
+		$folder = translations::getOne($editId);
+		self::render('editfolder', array('active' => $editId, 'folder' => $folder));
 	}
 	
 	public static function deleteKey($keyId, $active){
@@ -124,11 +162,11 @@ class controller{
 		}
 		$masters = config::get('masters');
 		if($masters){
-			foreach($masters as $masters){
-				if(strstr($masters, $_SERVER['HTTP_HOST'])){
-					throw new Exception("You might be trying to use your own server as master. That would probably not be a good idea. ({$masters})");
+			foreach($masters as $master){
+				if(strstr($master, $_SERVER['HTTP_HOST'])){
+					throw new Exception("You might be trying to use your own server as master. That is probably not a good idea. ({$master})");
 				}
-				$response = self::post($masters.$_SERVER['REQUEST_URI'].'?apicall=true', $_POST);
+				$response = self::post($master.$_SERVER['REQUEST_URI'].'?apicall=true', $_POST);
 				$result = explode("\r\n", $response);
 			}
 		}

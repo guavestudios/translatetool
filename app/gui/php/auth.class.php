@@ -38,6 +38,10 @@ class auth{
 		}
 	}
 	
+	public static function has($role){
+		return in_array($role, $_SESSION['auth']['roles']);
+	}
+	
 }
 
 ?>
