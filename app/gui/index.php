@@ -11,32 +11,9 @@ use Guave\translatetool\converter;
 
 date_default_timezone_set("Europe/Zurich");
 
-Flight::set('mastersedRoutes', array(
-	'POST /add/folder',
-	'/delete/@keyId/@active',
-	'POST /key/@keyId'
-));
-
 Flight::before('route', function(&$params, &$output){
-	if(!auth::ed() and $params[0] != '/login' and $params[0] != 'POST /login'){
+	if(!auth::ed() and $_SERVER['REQUEST_URI'] != '/login'){
 		controller::redirect('/login');
-	}
-});
-
-Flight::before('route', function(&$params, &$output){
-	if(in_array($params[0], Flight::get('mastersedRoutes')) and (strstr($params[0], 'POST') and !empty($_POST))){
-		$c = new Curl();
-		$masters = config::get('masters');
-		if($masters){
-			foreach($masters as $masters){
-				if(strstr($masters, $_SERVER['HTTP_HOST'])){
-					throw new Exception("You might be trying to use your own server as master. That would probably not be a good idea. ({$masters})");
-				}
-				$c->header(true);
-				$response = $c->post($masters.$_SERVER['REQUEST_URI'], $_POST);
-				die(reset(explode("\r\n", $response)));
-			}
-		}
 	}
 });
 
@@ -56,6 +33,7 @@ Flight::route('/delete/@keyId/@active', array('controller','deleteKey'));
 class controller{
 
 	public static function addFolder(){
+		self::mirror();
 		translations::append(array(
 			array(
 				'key' => $_POST['foldername'],
@@ -67,6 +45,7 @@ class controller{
 	}
 	
 	public static function deleteKey($keyId, $active){
+		self::mirror();
 		translations::deleteRow($keyId);
 		self::redirect('/key/'.$active);
 	}
@@ -77,6 +56,7 @@ class controller{
 	}
 
 	public static function saveKeys($keyId){
+		self::mirror();
 		$entries = array();
 		foreach($_POST['key'] as $k => $key){
 			$value = $_POST['value'][$k];
@@ -134,6 +114,21 @@ class controller{
 	private static function render($template, $vars = array()){
 		Flight::render($template, $vars, 'body_content');
 		Flight::render('layout', $vars);
+	}
+	
+	private static function mirror(){
+		$c = new Curl();
+		$masters = config::get('masters');
+		if($masters){
+			foreach($masters as $masters){
+				if(strstr($masters, $_SERVER['HTTP_HOST'])){
+					throw new Exception("You might be trying to use your own server as master. That would probably not be a good idea. ({$masters})");
+				}
+				$c->header(true);
+				$response = $c->post($masters.$_SERVER['REQUEST_URI'], $_POST);
+				die(reset(explode("\r\n", $response)));
+			}
+		}
 	}
 	
 }
