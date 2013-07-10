@@ -126,7 +126,7 @@ class controller{
 		self::render('login');
 	}
 	
-	private static function redirect($url){
+	public static function redirect($url){
 		header('Location: '.$url);
 		exit;
 	}
