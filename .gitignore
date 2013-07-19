@@ -1,4 +1,4 @@
 /nbproject
 /app/db/dblog.sqlite
 /app/config.json
-/app/db/dblog.sqlite
+/app/db/*.sqlite

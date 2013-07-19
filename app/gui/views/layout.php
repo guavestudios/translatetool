@@ -33,7 +33,16 @@
 	<body>
 		<div id="wrapper">
 			<div class="box clearfix">
-				<div class="title">GUAVE Übersetzungen</div>
+				<div class="title clearfix">
+					<span class="text">GUAVE Übersetzungen</span>
+					<span class="buttons">
+						<?php
+							$bounceback = substr($_SERVER['REQUEST_URI'], strlen(config::get('base')));
+						?>
+						<a href="update?bounceback=<?= $bounceback ?>">Update</a> | 
+						<a href="logout">Logout</a>
+					</span>
+				</div>
 				<div class="tree">
 					<div class="treeInner">
 						<ul>

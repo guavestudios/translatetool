@@ -50,9 +50,19 @@ img{
 }
 .box .title{
 	background-color: #A4C92C;
-	color: white;
 	padding: 10px;
+}
+.box .title .text{
+	float: left;
 	font-size: 20px;
+	color: white;
+}
+.box .title .buttons{
+	float: right;
+	color: white;
+}
+.box .title .buttons a{
+	color: white;
 }
 .box .text{
 	padding: 10px;

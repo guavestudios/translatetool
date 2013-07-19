@@ -11,20 +11,15 @@ use Guave\translatetool\converter;
 
 date_default_timezone_set("Europe/Zurich");
 
-foreach(config::get('masters') as $master){
-	$dump = json_decode(file_get_content($master.'/dump'));
-	translations::delete();
-	translations::append($dump);
-}
-
 Flight::before('route', function(&$params, &$output){
 	if(!auth::ed() and $_SERVER['REQUEST_URI'] != '/login' and !isset($_GET['apicall'])){
-		controller::redirect('/login');
+		controller::redirect('login');
 	}
 });
 
 Flight::route('POST /login', array('controller','loginAuth'));
 Flight::route('/login', array('controller','login'));
+Flight::route('/logout', array('controller','logout'));
 
 Flight::route('/overview', array('controller','overview'));
 
@@ -42,6 +37,7 @@ Flight::route('/delete/@keyId/@active', array('controller','deleteKey'));
 
 Flight::route('/poll', array('controller', 'poll'));
 Flight::route('/dump', array('controller', 'dump'));
+Flight::route('/update', array('controller', 'updateDb'));
 
 class controller{
 
@@ -54,7 +50,7 @@ class controller{
 				'value' => null
 			)
 		));
-		self::redirect('/key/'.translations::insertId());
+		self::redirect('key/'.translations::insertId());
 	}
 	
 	public static function editFolder(){
@@ -64,12 +60,12 @@ class controller{
 				'key' => $_POST['foldername']
 			)
 		);
-		self::redirect('/key/'.$_POST['parent_id']);
+		self::redirect('key/'.$_POST['parent_id']);
 	}
 	
 	public static function delFolder($delId){
 		self::recursiveDelete($delId);
-		self::redirect('/overview');
+		self::redirect('overview');
 	}
 	
 	private static function recursiveDelete($delId){
@@ -94,7 +90,7 @@ class controller{
 	public static function deleteKey($keyId, $active){
 		self::mirror();
 		translations::deleteRow($keyId);
-		self::redirect('/key/'.$active);
+		self::redirect('key/'.$active);
 	}
 
 	public static function key($keyId){
@@ -126,7 +122,7 @@ class controller{
 			}
 		}
 		translations::append($entries);
-		self::redirect('/key/'.$keyId);
+		self::redirect('key/'.$keyId);
 	}
 	
 	public static function overview(){
@@ -135,10 +131,15 @@ class controller{
 
 	public static function loginAuth(){
 		if(auth::login($_POST['username'], $_POST['passwd'])){
-			self::redirect('/');
+			self::redirect('');
 		}else{
-			self::redirect('/login');
+			self::redirect('login');
 		}
+	}
+	
+	public static function logout(){
+		auth::logout();
+		self::redirect('');
 	}
 	
 	public static function export(){
@@ -163,7 +164,7 @@ class controller{
 	}
 	
 	public static function redirect($url){
-		header('Location: '.$url);
+		header('Location: '.config::get('base').$url);
 		exit;
 	}
 	
@@ -183,6 +184,19 @@ class controller{
 			}
 		}
 		printJson("Nothing new");
+	}
+	
+	public static function updateDb(){
+		foreach(config::get('masters') as $master){
+			$urlcontent = file_get_contents($master.'/dump?apicall');
+			$dump = json_decode($urlcontent, true);
+			translations::delete();
+			translations::append($dump);
+		}
+		if(isset($_GET['bounceback'])){
+			self::redirect($_GET['bounceback']);
+		}
+		self::redirect('');
 	}
 	
 	private static function render($template, $vars = array()){

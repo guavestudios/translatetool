@@ -1,5 +1,5 @@
 {
-	"dbpath": "../db/dblog.sqlite",
+	"dbpath": "../../db/dblog.sqlite",
 	"base": "/",
 	"users":[
 		{

@@ -179,10 +179,10 @@ class translations{
 		if(!self::$sql){
 			$error = '';
 			$firstRun = false;
-			if(!file_exists(self::config('dbpath'))){
+			if(!file_exists(__DIR__.'/'.self::config('dbpath'))){
 				$firstRun = true;
 			}
-			if(!self::$sql = new SQLite3(self::config('dbpath'), 0666, $error)){
+			if(!self::$sql = new SQLite3(__DIR__.'/'.self::config('dbpath'), 0666, $error)){
 				die($error);
 			}
 			if($firstRun){
@@ -249,7 +249,7 @@ class translations{
 	}
 	
 	public static function backup($fileIdent = ''){
-		$path = self::config('dbpath');
+		$path = __DIR__.'/'.self::config('dbpath');
 		$file = basename($path);
 		$dir = dirname($path);
 		if($fileIdent != ''){
@@ -265,7 +265,7 @@ class translations{
 			}
 		}
 		$path = self::config('dbpath');
-		return unlink($path);
+		return unlink(__DIR__.'/'.$path);
 	}
 	
 }
