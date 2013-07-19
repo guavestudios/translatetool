@@ -6,6 +6,8 @@ class translations{
 	private static $config = null;
 	private static $sql_mode = SQLITE3_ASSOC;
 	private static $fieldTypes = array();
+	private static $translationTable = 'translations';
+	private static $logTable = 'log';
 
 	public static function append($array){
 		foreach($array as $row){
@@ -21,7 +23,7 @@ class translations{
 
 			self::qry("
 				INSERT INTO
-					log(
+					".self::$translationTable."(
 						".implode(",", array_keys($row))."
 					)
 				VALUES (
@@ -40,7 +42,7 @@ class translations{
 		}
 
 		self::qry("
-			UPDATE log SET ".implode(", ", $qryStringPrep)." WHERE id = {$id}
+			UPDATE ".self::$translationTable." SET ".implode(", ", $qryStringPrep)." WHERE id = {$id}
 		");
 	}
 	
@@ -48,7 +50,7 @@ class translations{
 		if(!is_numeric($id)){
 			throw new Exception("ID is not numeric (given: '{$id}')");
 		}
-		self::qry("DELETE FROM log WHERE id = {$id}");
+		self::qry("DELETE FROM ".self::$translationTable." WHERE id = {$id}");
 	}
 	
 	public static function insertId(){
@@ -65,7 +67,7 @@ class translations{
 			SELECT
 				{$select}
 			FROM
-				log
+				".self::$translationTable."
 			{$where}
 			ORDER BY
 				{$order}
@@ -98,7 +100,7 @@ class translations{
 			SELECT
 				*
 			FROM
-				log
+				".self::$translationTable."
 			WHERE
 				parent_id = {$keyId}
 			AND
@@ -147,12 +149,12 @@ class translations{
 			}else{
 				$subtree = self::getTreeHtml($active, $value['children']);
 				$html .= '<li class="'.($value['content']['id'] == $active ? 'active' : '').'">'
-						.'<span class="row"><a href="/key/'.$value['content']['id'].'">'.$key.'</a>';
+						.'<span class="row"><a href="key/'.$value['content']['id'].'">'.$key.'</a>';
 				if(auth::has('admin')){
 				$html .= '<span class="hovermenu">'
-						.'<a href="/add/folder/'.$value['content']['id'].'"><img src="/gui/images/add-icon.png" height="14"></a>'
-						.'<a href="/edit/folder/'.$value['content']['id'].'"><img src="/gui/images/edit-icon.png" height="14"></a>'
-						.'<a href="/del/folder/'.$value['content']['id'].'" onClick="return confirm(\'Wirklich löschen?\')"><img src="/gui/images/delete-icon.png" height="14"></a>'
+						.'<a href="add/folder/'.$value['content']['id'].'"><img src="gui/images/add-icon.png" height="14"></a>'
+						.'<a href="edit/folder/'.$value['content']['id'].'"><img src="gui/images/edit-icon.png" height="14"></a>'
+						.'<a href="del/folder/'.$value['content']['id'].'" onClick="return confirm(\'Wirklich löschen?\')"><img src="gui/images/delete-icon.png" height="14"></a>'
 						.'</span>';
 				}
 				$html .= '</span>'.$subtree.'</li>';
@@ -167,7 +169,7 @@ class translations{
 			SELECT
 				*
 			FROM
-				log
+				".self::$translationTable."
 			WHERE
 				id = {$id}
 		")->fetchArray(self::$sql_mode);
@@ -176,20 +178,48 @@ class translations{
 	private static function getSql(){
 		if(!self::$sql){
 			$error = '';
+			$firstRun = false;
+			if(!file_exists(self::config('dbpath'))){
+				$firstRun = true;
+			}
 			if(!self::$sql = new SQLite3(self::config('dbpath'), 0666, $error)){
 				die($error);
 			}
-			self::createTable();
+			if($firstRun){
+				self::createTable();
+			}
 		}
 		return self::$sql;
 	}
 	
 	private static function createTable(){
 		self::getSql()->query("
-			CREATE TABLE IF NOT EXISTS `log`(
+			CREATE TABLE IF NOT EXISTS `".self::$translationTable."`(
 				".  implode(",\n", self::config('fields')).",
 				`id` INTEGER PRIMARY KEY
 			);
+		");
+		self::getSql()->query("
+			CREATE TABLE IF NOT EXISTS `".self::$logTable."`(
+				".  implode(",\n", self::config('fields')).",
+				`id` INTEGER,
+				`modDate` INTEGER,
+				`action` TEXT
+			);
+		");
+		self::getSql()->query("
+			CREATE TRIGGER IF NOT EXISTS fill_log_insert INSERT ON ".self::$translationTable."
+			BEGIN
+				INSERT INTO log(key, value, parent_id, id, modDate, action) VALUES (NEW.key, NEW.value, NEW.parent_id, NEW.id, strftime('%s', 'now'), 'insert');
+			END;
+			CREATE TRIGGER IF NOT EXISTS fill_log_update UPDATE ON ".self::$translationTable."
+			BEGIN
+				INSERT INTO log(key, value, parent_id, id, modDate, action) VALUES (NEW.key, NEW.value, NEW.parent_id, NEW.id, strftime('%s', 'now'), 'update');
+			END;
+			CREATE TRIGGER IF NOT EXISTS fill_log_delete UPDATE ON ".self::$translationTable."
+			BEGIN
+				INSERT INTO log(key, value, parent_id, id, modDate, action) VALUES (NEW.key, NEW.value, NEW.parent_id, NEW.id, strftime('%s', 'now'), 'delete');
+			END;
 		");
 	}
 	

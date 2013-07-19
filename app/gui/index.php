@@ -11,6 +11,12 @@ use Guave\translatetool\converter;
 
 date_default_timezone_set("Europe/Zurich");
 
+foreach(config::get('masters') as $master){
+	$dump = json_decode(file_get_content($master.'/dump'));
+	translations::delete();
+	translations::append($dump);
+}
+
 Flight::before('route', function(&$params, &$output){
 	if(!auth::ed() and $_SERVER['REQUEST_URI'] != '/login' and !isset($_GET['apicall'])){
 		controller::redirect('/login');
@@ -33,6 +39,9 @@ Flight::route('/del/folder/@delId', array('controller','delFolder'));
 
 Flight::route('/export', array('controller','export'));
 Flight::route('/delete/@keyId/@active', array('controller','deleteKey'));
+
+Flight::route('/poll', array('controller', 'poll'));
+Flight::route('/dump', array('controller', 'dump'));
 
 class controller{
 
@@ -142,13 +151,38 @@ class controller{
 		echo 'done';
 	}
 	
+	public static function dump(){
+		$converter = new converter();
+		$output = $converter->save('json', translations::get(array('key','value','parent_id')));
+		header('Content-Type: '.$output['meta']['mime']);
+		echo $output['file'];
+	}
+	
 	public static function login(){
-		self::render('login');
+		Flight::render('login');
 	}
 	
 	public static function redirect($url){
 		header('Location: '.$url);
 		exit;
+	}
+	
+	public static function poll(){
+		// Close session because PHP will always wait before serving new pages to the same session
+		session_write_close();
+		for($i = 0; $i < 50; $i++){
+
+			if(count($tablesToUpdate) > 0){
+				json_encode(array(
+					'time' => time(),
+					'status' => true,
+					'response' => array()
+				));
+			}else{
+				usleep(500000); // 0.5s
+			}
+		}
+		printJson("Nothing new");
 	}
 	
 	private static function render($template, $vars = array()){

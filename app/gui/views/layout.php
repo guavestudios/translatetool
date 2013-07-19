@@ -2,9 +2,11 @@
 <html>
 	<head>
 		<title>Translate Tool</title>
+		<base href="http://<?= $_SERVER['HTTP_HOST'].config::get('base') ?>">
 		<link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
-		<link href="/gui/css/styles.css" rel="stylesheet" type="text/css">
+		<link href="gui/css/styles.css" rel="stylesheet" type="text/css">
 		<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+		<script type="text/javascript" src="gui/js/main.js"></script>
 		<script>
 			$(function(){
 				$('.keyform').on('keypress', 'input', function (e) {
@@ -36,7 +38,7 @@
 					<div class="treeInner">
 						<ul>
 							<li>
-								<a href="/overview">Home</a>
+								<a href="overview">Home</a>
 								<?php echo translations::getTreeHtml($active); ?>
 							</li>
 						</ul>
