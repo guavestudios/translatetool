@@ -164,7 +164,7 @@ class controller{
 	
 	public static function dump(){
 		$converter = new converter();
-		$output = $converter->save('json', translations::get(array('key','value','parent_id')));
+		$output = $converter->save('json', translations::get());
 		header('Content-Type: '.$output['meta']['mime']);
 		echo $output['file'];
 	}
@@ -200,7 +200,7 @@ class controller{
 		foreach(config::get('masters') as $master){
 			$urlcontent = file_get_contents($master.'/dump?apicall');
 			$dump = json_decode($urlcontent, true);
-			translations::delete();
+			translations::delete(false);
 			translations::append($dump);
 		}
 		if(isset($_GET['bounceback'])){
@@ -224,7 +224,7 @@ class controller{
 				if(strstr($master, $_SERVER['HTTP_HOST'])){
 					throw new Exception("You might be trying to use your own server as master. That is probably not a good idea. ({$master})");
 				}
-				$response = self::post($master.$_SERVER['REQUEST_URI'].'?apicall=true', $_POST);
+				$response = self::post($master.str_replace(config::get('base'), "/", $_SERVER['REQUEST_URI']).'?apicall=true', $_POST);
 				$result = explode("\r\n", $response);
 			}
 		}

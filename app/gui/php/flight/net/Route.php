@@ -90,7 +90,7 @@ class Route {
         }
 
         // Attempt to match route and named parameters
-        if (preg_match('#^'.$regex.'(?:\?.*)?$#i', $url, $matches)) {
+        if (preg_match('#^'.substr(\config::get('base'), 0, -1).$regex.'(?:\?.*)?$#i', $url, $matches)) {
             foreach ($ids as $k => $v) {
                 $this->params[$k] = (array_key_exists($k, $matches)) ? urldecode($matches[$k]) : null;
             }

@@ -31,7 +31,7 @@ class converter{
 		if(!file_exists(__DIR__.$this->adapterPath.'/'.$adapter.'/'.$this->adapterStartFile)){
 			throw new \Exception("Adapter not found in: ".$this->adapterPath.'/'.$adapter.'/'.$this->adapterStartFile);
 		}
-		require_once $this->adapterPath.'/'.$adapter.'/'.$this->adapterStartFile;
+		require_once __DIR__.$this->adapterPath.'/'.$adapter.'/'.$this->adapterStartFile;
 
 		$qualifiedName = 'Guave\translatetool\\'.$adapter;
 		if(!class_exists($qualifiedName)){
