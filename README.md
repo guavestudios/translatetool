@@ -4,6 +4,7 @@ Default config:
 ```json
 {
 	"dbpath": "../db/dblog.sqlite",
+	"languages": ["de", "en"],
 	"users":[
 		{
 			"username": "admin",
@@ -26,11 +27,11 @@ Default config:
 	"exports": [
 		{
 			"adapter": "json",
-			"path": "{doc_root}/translation.json"
+			"path": "{doc_root}/translation.{lang}.json"
 		},
 		{
 			"adapter": "yaml",
-			"path": "{doc_root}/translation.yml"
+			"path": "{doc_root}/translation.{lang}.yml"
 		}
 	],
 	"fields":[
