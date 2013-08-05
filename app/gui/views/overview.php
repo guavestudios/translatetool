@@ -11,8 +11,8 @@
 				<input type="text" name="key[]" value="<?= $k['key']; ?>"> 
 				<input type="text" name="value[]" value="<?= $k['value']; ?>" class="value">
 				<input type="hidden" name="id[]" value="<?= $k['id']; ?>"> 
-				<a href="/delete/<?= $k['id']; ?>/<?= $active ?>" onClick="return confirm('Wirklich löschen?')" tabindex="-1">
-					<img src="/gui/images/delete.png" border="0">
+				<a href="delete/<?= $k['id']; ?>/<?= $active ?>" onClick="return confirm('Wirklich löschen?')" tabindex="-1">
+					<img src="gui/images/delete.png" border="0">
 				</a>
 			<?php else: ?>
 				<?= $language ?>
@@ -31,17 +31,16 @@
 		<?= reset($l); ?>
 		<input type="text" name="key[]" value="" placeholder="Key" class="key"> 
 		<input type="text" name="value[]" value="" placeholder="Wert" class="value">
-		<input type="hidden" name="language[]" value="<?= reset($l); ?>" placeholder="Wert" class="value">
+		<input type="hidden" name="language[]" value="<?= reset($l); ?>">
 		<input type="hidden" name="id[]" value="">
 		</div>
-		<br>
 	</div>
 	<input type="submit" value="Speichern"> (CTRL + S) - Leere Einträge werden nicht gespeichert.
 	</form>
 <?php else: ?>
 	Bitte wähle einen Key aus der linken Spalte.<br>
 	<br>
-	<form action="/add/folder/" method="post">
+	<form action="add/folder/" method="post">
 		<h1>Bundle erstellen</h1>
 		<input type="text" name="foldername" placeholder="Name">
 		<input type="hidden" name="parent_id" value="0">

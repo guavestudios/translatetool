@@ -2,22 +2,24 @@
 <html>
 	<head>
 		<title>Translate Tool</title>
+		<meta charset="utf-8">
 		<base href="http://<?= $_SERVER['HTTP_HOST'].config::get('base') ?>">
 		<link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
 		<link href="gui/css/styles.css" rel="stylesheet" type="text/css">
 		<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 		<script type="text/javascript" src="gui/js/main.js"></script>
 		<script>
+			<?php $l = config::get('languages'); ?>
 			$(function(){
 				$('.keyform').on('keypress', 'input', function (e) {
 				  if (e.which == 13) {
-					$(this).parent().append('<input type="text" name="key[]" value="" placeholder="Key" class="key"> '+
+					$('.inputvalues').append('<div class="keyContainer"><?= reset($l); ?><input type="text" name="key[]" value="" placeholder="Key" class="key"> '+
 											'<input type="text" name="value[]" value="" placeholder="Wert" class="value">'+
 											'<input type="hidden" name="id[]" value="">'+
-											'<br>'
+											'<input type="hidden" name="language[]" value="<?= reset($l); ?>"></div>'
 											);
 					e.preventDefault();
-					$(this).parent().find('.key').last().focus();
+					$('.inputvalues').find('.key').last().focus();
 					return false;
 				  }
 				});

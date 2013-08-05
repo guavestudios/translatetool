@@ -12,9 +12,13 @@ use Guave\translatetool\converter;
 date_default_timezone_set("Europe/Zurich");
 
 Flight::before('route', function(&$params, &$output){
-	if(!auth::ed() and $_SERVER['REQUEST_URI'] != '/login' and !isset($_GET['apicall'])){
+	if(!auth::ed() and $_SERVER['REQUEST_URI'] != config::get('base').'login' and !isset($_GET['apicall'])){
 		controller::redirect('login');
 	}
+});
+
+Flight::route('/', function(){
+	controller::redirect('overview');
 });
 
 Flight::route('POST /login', array('controller','loginAuth'));
@@ -149,7 +153,7 @@ class controller{
 		$converter = new converter();
 		foreach(config::get('exports') as $export){
 			foreach(config::get('languages') as $lang){
-				$output = $converter->save($export['adapter'], translations::getTree(true, 0, "language = '{$lang}'"));
+				$output = $converter->save($export['adapter'], translations::getTree(true, 0, "language = '{$lang}' OR language IS NULL"));
 				$savePath = str_replace("{doc_root}", $_SERVER['DOCUMENT_ROOT'], $export['path']);
 				$savePath = str_replace("{lang}", $lang, $savePath);
 				file_put_contents($savePath, $output['file']);
