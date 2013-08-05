@@ -125,3 +125,7 @@ input[type=button]:active{
 input.value{
 	width: 400px;
 }
+
+.keyContainer{
+	padding: 10px;
+}

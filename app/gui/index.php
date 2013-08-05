@@ -104,6 +104,7 @@ class controller{
 		foreach($_POST['key'] as $k => $key){
 			$value = $_POST['value'][$k];
 			$id = $_POST['id'][$k];
+			$language = $_POST['language'][$k];
 			if(empty($id) and empty($value) and empty($key)){
 				continue;
 			}
@@ -111,7 +112,8 @@ class controller{
 				$entries[] = array(
 					'parent_id' => $keyId,
 					'key' => $key,
-					'value' => $value
+					'value' => $value,
+					'language' => $language
 				);
 			}
 			if(!empty($id) and !(empty($value) and empty($key))){
@@ -145,9 +147,12 @@ class controller{
 	public static function export(){
 		$converter = new converter();
 		foreach(config::get('exports') as $export){
-			$output = $converter->save($export['adapter'], translations::getTree(true));
-			$savePath = str_replace("{doc_root}", $_SERVER['DOCUMENT_ROOT'], $export['path']);
-			file_put_contents($savePath, $output['file']);
+			foreach(config::get('languages') as $lang){
+				$output = $converter->save($export['adapter'], translations::getTree(true, 0, "language = '{$lang}'"));
+				$savePath = str_replace("{doc_root}", $_SERVER['DOCUMENT_ROOT'], $export['path']);
+				$savePath = str_replace("{lang}", $lang, $savePath);
+				file_put_contents($savePath, $output['file']);
+			}
 		}
 		echo 'done';
 	}

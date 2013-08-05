@@ -1,6 +1,7 @@
 {
 	"dbpath": "../../db/dblog.sqlite",
 	"base": "/",
+	"languages": ["de", "en"],
 	"users":[
 		{
 			"username": "admin",
@@ -33,6 +34,7 @@
 	"fields":[
 		"key TEXT",
 		"value TEXT",
-		"parent_id INT"
+		"parent_id INT",
+		"language TEXT"
 	]
 }

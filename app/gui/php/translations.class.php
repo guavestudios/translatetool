@@ -79,8 +79,8 @@ class translations{
 		return $result;
 	}
 	
-	public static function getTree($plain = false, $root = 0){
-		$all = self::get(array(), array('value','key'));
+	public static function getTree($plain = false, $root = 0, $where = null){
+		$all = self::get(array(), array('value','key'), $where);
 		$assocKeys = array();
 		$rootKeys = array();
 		foreach($all as $key){
@@ -111,7 +111,8 @@ class translations{
 		$result = array();
 		if($results){
 			while($r = $results->fetchArray(self::$sql_mode)){
-				$result[] = $r;
+				$result[$r['key']][$r['language']] = $r;
+				$result[$r['key']]['keyName'] = $r['key'];
 			}
 		}
 		return $result;
@@ -210,15 +211,18 @@ class translations{
 		self::getSql()->query("
 			CREATE TRIGGER IF NOT EXISTS fill_log_insert INSERT ON ".self::$translationTable."
 			BEGIN
-				INSERT INTO log(key, value, parent_id, id, modDate, action) VALUES (NEW.key, NEW.value, NEW.parent_id, NEW.id, strftime('%s', 'now'), 'insert');
+				INSERT INTO log(key, value, parent_id, id, language, modDate, action)
+				VALUES (NEW.key, NEW.value, NEW.parent_id, NEW.id, NEW.language, strftime('%s', 'now'), 'insert');
 			END;
 			CREATE TRIGGER IF NOT EXISTS fill_log_update UPDATE ON ".self::$translationTable."
 			BEGIN
-				INSERT INTO log(key, value, parent_id, id, modDate, action) VALUES (NEW.key, NEW.value, NEW.parent_id, NEW.id, strftime('%s', 'now'), 'update');
+				INSERT INTO log(key, value, parent_id, id, language, modDate, action)
+				VALUES (NEW.key, NEW.value, NEW.parent_id, NEW.id, NEW.language, strftime('%s', 'now'), 'update');
 			END;
 			CREATE TRIGGER IF NOT EXISTS fill_log_delete UPDATE ON ".self::$translationTable."
 			BEGIN
-				INSERT INTO log(key, value, parent_id, id, modDate, action) VALUES (NEW.key, NEW.value, NEW.parent_id, NEW.id, strftime('%s', 'now'), 'delete');
+				INSERT INTO log(key, value, parent_id, id, language, modDate, action)
+				VALUES (NEW.key, NEW.value, NEW.parent_id, NEW.id, NEW.language, strftime('%s', 'now'), 'delete');
 			END;
 		");
 	}
