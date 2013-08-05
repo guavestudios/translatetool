@@ -124,6 +124,7 @@ class controller{
 			}
 		}
 		translations::append($entries);
+		self::export();
 		self::redirect('key/'.$keyId);
 	}
 	
