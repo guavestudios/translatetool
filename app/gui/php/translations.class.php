@@ -37,7 +37,7 @@ class translations{
 		$qryStringPrep = array();
 		
 		foreach($values as $key => $value){
-			$valuePrep = is_numeric($value) ? $value : "'".$value."'";
+			$valuePrep = is_numeric($value) ? $value : "'".self::getSql()->escapeString($value)."'";
 			$qryStringPrep[] = "{$key} = {$valuePrep}";
 		}
 
@@ -111,8 +111,9 @@ class translations{
 		$result = array();
 		if($results){
 			while($r = $results->fetchArray(self::$sql_mode)){
-				$result[$r['key']][$r['language']] = $r;
+				$result[$r['key']][$r['language']][] = $r;
 				$result[$r['key']]['keyName'] = $r['key'];
+				$debug[] = $r;
 			}
 		}
 		return $result;
@@ -146,7 +147,7 @@ class translations{
 		$html = '<ul>';
 		foreach($tree as $key => $value){
 			if(!isset($value['children'])){
-				$html .= '<li class="'.($value['content']['id'] == $active ? 'active' : '').'">'.$value['content']['key'].'</li>';
+				//$html .= '<li class="'.($value['content']['id'] == $active ? 'active' : '').'">'.$value['content']['key'].'</li>';
 			}else{
 				$subtree = self::getTreeHtml($active, $value['children']);
 				$html .= '<li class="'.($value['content']['id'] == $active ? 'active' : '').'">'

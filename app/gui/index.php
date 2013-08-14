@@ -112,7 +112,7 @@ class controller{
 			if(empty($id) and empty($value) and empty($key)){
 				continue;
 			}
-			if(empty($id) and !(empty($value) and empty($key))){
+			if(empty($id) and !empty($value) and !empty($key)){
 				$entries[] = array(
 					'parent_id' => $keyId,
 					'key' => $key,
@@ -120,7 +120,7 @@ class controller{
 					'language' => $language
 				);
 			}
-			if(!empty($id) and !(empty($value) and empty($key))){
+			if(!empty($id) and !empty($value) and !empty($key)){
 				translations::update($id, array(
 					'key' => $key,
 					'value' => $value
@@ -200,7 +200,7 @@ class controller{
 		foreach(config::get('masters') as $master){
 			$urlcontent = file_get_contents($master.'/dump?apicall');
 			$dump = json_decode($urlcontent, true);
-			translations::delete(false);
+			translations::delete();
 			translations::append($dump);
 		}
 		if(isset($_GET['bounceback'])){

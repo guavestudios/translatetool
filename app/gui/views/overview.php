@@ -6,14 +6,18 @@
 			<div class="keyContainer">
 			<?php foreach(config::get('languages') as $language): ?>
 			<?php if(isset($key[$language])): $k = $key[$language]; ?>
-				<?= $language ?>
-				<input type="hidden" name="language[]" value="<?= $k['language']; ?>">
-				<input type="text" name="key[]" value="<?= $k['key']; ?>"> 
-				<input type="text" name="value[]" value="<?= $k['value']; ?>" class="value">
-				<input type="hidden" name="id[]" value="<?= $k['id']; ?>"> 
-				<a href="delete/<?= $k['id']; ?>/<?= $active ?>" onClick="return confirm('Wirklich löschen?')" tabindex="-1">
-					<img src="gui/images/delete.png" border="0">
-				</a>
+				<?php foreach($k as $row): ?>
+				<div>
+					<?= $language ?>
+					<input type="hidden" name="language[]" value="<?= $row['language']; ?>">
+					<input type="text" name="key[]" value="<?= $row['key']; ?>"> 
+					<input type="text" name="value[]" value="<?= htmlspecialchars($row['value']); ?>" class="value">
+					<input type="hidden" name="id[]" value="<?= $row['id']; ?>"> 
+					<a href="delete/<?= $row['id']; ?>/<?= $active ?>" onClick="return confirm('Wirklich löschen?')" tabindex="-1">
+						<img src="gui/images/delete.png" border="0">
+					</a>
+				</div>
+				<?php endforeach; ?>
 			<?php else: ?>
 				<?= $language ?>
 				<input type="hidden" name="language[]" value="<?= $language; ?>">
@@ -22,7 +26,6 @@
 				<input type="hidden" name="language[]" value="<?= $language; ?>" placeholder="Wert" class="value">
 				<input type="hidden" name="id[]" value="">
 			<?php endif; ?>
-			<br>
 			<?php endforeach; ?>
 			</div>
 		<?php endforeach; ?>
