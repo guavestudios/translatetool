@@ -153,7 +153,11 @@ class controller{
 		$converter = new converter();
 		foreach(config::get('exports') as $export){
 			foreach(config::get('languages') as $lang){
-				$output = $converter->save($export['adapter'], translations::getTree(true, 0, "language = '{$lang}' OR language IS NULL"));
+				$exportPlain = true;
+				if(isset($export['raw']) and $export['raw'] == 'true'){
+					$exportPlain = false;
+				}
+				$output = $converter->save($export['adapter'], translations::getTree($exportPlain, 0, "language = '{$lang}' OR language IS NULL"));
 				$savePath = str_replace("{doc_root}", $_SERVER['DOCUMENT_ROOT'], $export['path']);
 				$savePath = str_replace("{lang}", $lang, $savePath);
 				file_put_contents($savePath, $output['file']);

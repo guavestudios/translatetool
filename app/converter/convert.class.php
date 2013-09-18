@@ -24,7 +24,7 @@ class converter{
 	}
 	
 	public function write($filePath, $fileName, $adapterResponse){
-		file_put_contents($filePath.$fileName.'.'.$adapterResponse['meta']['extension'], $adapterResponse['file']);
+		file_put_contents($filePath.$fileName.'.'.$adapterResponse['meta']['extension'], \utf8_encode($adapterResponse['file']));
 	}
 	
 	private function loadAdapter($adapter){
