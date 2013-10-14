@@ -41,6 +41,7 @@ Flight::route('/delete/@keyId/@active', array('controller','deleteKey'));
 
 Flight::route('/poll', array('controller', 'poll'));
 Flight::route('/dump', array('controller', 'dump'));
+Flight::route('/importCSV', array('controller', 'importCSV'));
 Flight::route('/update', array('controller', 'updateDb'));
 
 class controller{
@@ -171,6 +172,54 @@ class controller{
 		$output = $converter->save('json', translations::get());
 		header('Content-Type: '.$output['meta']['mime']);
 		echo $output['file'];
+	}
+	
+	public static function importCSV(){
+		$converter = new converter();
+		$csv = $converter->load('csv', $_SERVER['DOCUMENT_ROOT'].'/castle_trans.csv');
+		$allGermanTranslations = translations::getTree(true, 0, "language = 'de' OR language IS NULL");
+		$allEnglishTranslations = translations::getTree(true, 0, "language = 'en' OR language IS NULL");
+		$allPossibleTranslations = self::emptyArrayValues($allGermanTranslations);
+		//var_dump(self::array_diff_key_recursive($csv, $allGermanTranslations));exit;
+		$allEnglishTranslations = array_replace_recursive($allPossibleTranslations, $allEnglishTranslations, $csv);
+		/*
+		var_dump(self::array_diff_key_recursive($allEnglishTranslations, $allGermanTranslations));
+		var_dump(self::array_diff_key_recursive($allGermanTranslations, $allEnglishTranslations));exit;
+		*/
+		$de = $converter->save('csv', $allGermanTranslations);
+		$en = $converter->save('csv', $allEnglishTranslations);
+		file_put_contents($_SERVER['DOCUMENT_ROOT'].'/castle_german_export.csv', $de['file']);
+		file_put_contents($_SERVER['DOCUMENT_ROOT'].'/castle_english_export.csv', $en['file']);
+		echo 'done';
+	}
+	
+	private static function array_diff_key_recursive(array $arr1, array $arr2) {
+		$diff = array_diff_key($arr1, $arr2);
+		$intersect = array_intersect_key($arr1, $arr2);
+		
+		foreach ($intersect as $k => $v) {
+			if (is_array($arr1[$k]) && is_array($arr2[$k])) {
+				$d = self::array_diff_key_recursive($arr1[$k], $arr2[$k]);
+				
+				if ($d) {
+					$diff[$k] = $d;
+				}
+			}
+		}
+		
+		return $diff;
+	}
+	
+	private static function emptyArrayValues(array $array){
+		$newArray = array();
+		foreach($array as $key => $value){
+			if(is_array($value)){
+				$newArray[$key] = self::emptyArrayValues($value);
+			}else{
+				$newArray[$key] = '';
+			}
+		}
+		return $newArray;
 	}
 	
 	public static function login(){
