@@ -41,11 +41,9 @@ Flight::route('/delete/@keyId/@active', array('controller','deleteKey'));
 
 Flight::route('/poll', array('controller', 'poll'));
 Flight::route('/dump', array('controller', 'dump'));
-Flight::route('/importCSV', array('controller', 'importCSV'));
-Flight::route('/update', array('controller', 'updateDb'));
-
+Flight::route('/importCSV', array('controller', 'importCSV'));Flight::route('/update', array('controller', 'updateDb'));
+Flight::route('/search', array('controller', 'search'));
 Flight::route('/convert', array('controller', 'convertKey'));
-
 class controller{
 
 	public static function addFolder(){
@@ -236,8 +234,7 @@ class controller{
 		}
 		return $newArray;
 	}
-	
-	public static function login(){
+		public static function login(){
 		Flight::render('login');
 	}
 	
@@ -271,10 +268,17 @@ class controller{
 			translations::delete();
 			translations::append($dump);
 		}
+		self::export();
 		if(isset($_GET['bounceback'])){
 			self::redirect($_GET['bounceback']);
 		}
 		self::redirect('');
+	}
+	
+	public static function search(){
+		$searchString = $_POST['search'];
+		$results = translations::searchForKey($searchString);
+		self::render('search', array('results' => $results, 'active' => 0));
 	}
 	
 	private static function render($template, $vars = array()){
