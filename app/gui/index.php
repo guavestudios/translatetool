@@ -44,6 +44,8 @@ Flight::route('/dump', array('controller', 'dump'));
 Flight::route('/importCSV', array('controller', 'importCSV'));
 Flight::route('/update', array('controller', 'updateDb'));
 
+Flight::route('/convert', array('controller', 'convertKey'));
+
 class controller{
 
 	public static function addFolder(){
@@ -172,6 +174,19 @@ class controller{
 		$output = $converter->save('json', translations::get());
 		header('Content-Type: '.$output['meta']['mime']);
 		echo $output['file'];
+	}
+	
+	public static function convertKey(){
+		$adapter = config::get('export_key_adapter');
+		if(empty($adapter)){
+			echo 'The Translatetool needs to have the value in "export_key_adapter" set.';
+			exit;
+		}
+		$value = $_POST['value'];
+		$key = $_POST['key'];
+		$converter = new converter();
+		echo $converter->getKeyFormated($adapter, $key, $value);
+		exit;
 	}
 	
 	public static function importCSV(){

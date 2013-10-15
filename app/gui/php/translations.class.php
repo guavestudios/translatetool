@@ -228,6 +228,23 @@ class translations{
 		");
 	}
 	
+	public static function searchForKey($string){
+		$results = self::getSql()->query("
+			SELECT t1.*, t2.id as folder_id, t2.key as folder_name
+			FROM `".self::$translationTable."` t1
+			LEFT JOIN `".self::$translationTable."` t2 ON t1.parent_id = t2.id
+			WHERE t1.value LIKE '%".self::getSql()->escapeString($string)."%' OR t1.key LIKE '%".self::getSql()->escapeString($string)."%'
+			ORDER BY t1.key DESC
+		");
+		$result = array();
+		if($results){
+			while($r = $results->fetchArray(self::$sql_mode)){
+				$result[] = $r;
+			}
+		}
+		return $result;
+	}
+	
 	private static function qry($qry){
 		$sql = self::getSql();
 		return $sql->query($qry);

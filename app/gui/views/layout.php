@@ -38,11 +38,16 @@
 				<div class="title clearfix">
 					<span class="text">GUAVE Übersetzungen</span>
 					<span class="buttons">
-						<?php
-							$bounceback = substr($_SERVER['REQUEST_URI'], strlen(config::get('base')));
-						?>
-						<a href="update?bounceback=<?= $bounceback ?>">Update</a> | 
-						<a href="logout">Logout</a>
+						<span style="float:right">
+							<?php
+								$bounceback = substr($_SERVER['REQUEST_URI'], strlen(config::get('base')));
+							?>
+							<a href="update?bounceback=<?= $bounceback ?>">Update</a> | 
+							<a href="logout">Logout</a>
+						</span>
+						<form action="search" method="post">
+							<input type="text" name="search" value="<?= isset($_POST['search']) ? $_POST['search'] : '' ?>" placeholder="Search">
+						</form>
 					</span>
 				</div>
 				<div class="tree">
