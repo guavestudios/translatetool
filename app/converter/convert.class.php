@@ -27,6 +27,15 @@ class converter{
 		file_put_contents($filePath.$fileName.'.'.$adapterResponse['meta']['extension'], \utf8_encode($adapterResponse['file']));
 	}
 	
+	public function getKeyFormated($adapter, $key){
+		$adapterClass = $this->loadAdapter($adapter);
+		if(is_callable(array($adapterClass, 'outputKey'))){
+			return call_user_func_array(array($adapterClass, 'outputKey'), array($key));
+		}else{
+			throw new Exception("Adapter does not have a function defined to output keys");
+		}
+	}
+	
 	private function loadAdapter($adapter){
 		if(!file_exists(__DIR__.$this->adapterPath.'/'.$adapter.'/'.$this->adapterStartFile)){
 			throw new \Exception("Adapter not found in: ".$this->adapterPath.'/'.$adapter.'/'.$this->adapterStartFile);

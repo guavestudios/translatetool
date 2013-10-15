@@ -177,6 +177,35 @@ class translations{
 		")->fetchArray(self::$sql_mode);
 	}
 
+	public static function getParentIdForDotDelimitedKey($key){
+		$keys = explode(".", $key);
+		unset($keys[count($keys) - 1]);
+		return self::createFoldersFromDotDelimitedKey(array_values($keys));
+	}
+	
+	public static function createFoldersFromDotDelimitedKey($keys, $parentId = 0){
+		if(empty($keys)){
+			return $parentId;
+		}
+		$currentKey = $keys[0];
+		unset($keys[0]);
+		$keys = array_values($keys);
+		$result = self::get(array('id'), array(), "parent_id = {$parentId} AND key = '{$currentKey}' AND language IS NULL");
+		if(empty($result)){
+			self::append(array(
+				array(
+					'key' => $currentKey,
+					'parent_id' => $parentId,
+					'value' => null
+				)
+			));
+			$newId = self::insertId();
+			return self::createFoldersFromDotDelimitedKey($keys, $newId);
+		}else{
+			return self::createFoldersFromDotDelimitedKey($keys, $result[0]['id']);
+		}
+	}
+	
 	private static function getSql(){
 		if(!self::$sql){
 			$error = '';

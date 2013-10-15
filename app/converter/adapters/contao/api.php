@@ -18,9 +18,35 @@ class contao{
 		die('cannot load from this format yet');
 	}
 	
-	private function buildVarName($content, $keys = array()){
+	public function outputKey($key){
+		$var = $this->buildVarName($this->insertDotDelimitedArray($key, null), array(), false, false);
+		return '<?php echo '.$var[0].' ?>';
+	}
+	
+	private function insertDotDelimitedArray($key, $value, $array = array()){
+		$keys = explode(".", $key);
+		$firstKey = $keys[0];
+		if(!is_array($array)){
+			var_dump($array);exit;
+		}
+
+		if(count($keys) == 1){
+			$array[$firstKey] = $value;
+			return $array;
+		}
+		if(!isset($array[$firstKey])){
+			$array[$firstKey] = array();
+		}
+
+		unset($keys[0]);
+		$array[$firstKey] = $this->insertDotDelimitedArray(implode(".", $keys), $value, $array[$firstKey]);
+		return $array;
+	}
+	
+	private function buildVarName($content, $keys = array(), $useNewline = true, $returnValue = true){
 		$rows = array();
 		$oldKeys = $keys;
+		$newLineChar = $useNewline ? "\n" : "";
 		foreach($content as $key => $row){
 			$currentKeys = array_merge($oldKeys, array($key));
 			foreach($currentKeys as $k => $oneKey){
@@ -29,9 +55,13 @@ class contao{
 				}
 			}
 			if(is_array($row)){
-				$rows = array_merge($rows, $this->buildVarName($row, $currentKeys));
+				$rows = array_merge($rows, $this->buildVarName($row, $currentKeys, $useNewline, $returnValue));
 			}else{
-				$rows[] = "\$GLOBALS".implode("", $currentKeys)." = '".str_replace("'", "\'", $row)."';\n";
+				if($returnValue){
+					$rows[] = "\$GLOBALS".implode("", $currentKeys)." = '".str_replace("'", "\'", $row)."';".$newLineChar;
+				}else{
+					$rows[] = "\$GLOBALS".implode("", $currentKeys).";".$newLineChar;
+				}
 			}
 		}
 		

@@ -180,8 +180,26 @@ class controller{
 			echo 'The Translatetool needs to have the value in "export_key_adapter" set.';
 			exit;
 		}
+		$languages = config::get('languages');
+		$lang = $languages[0];
 		$value = $_POST['value'];
 		$key = $_POST['key'];
+		$keys = explode(".", $key);
+		$endKey = end($keys);
+		$parentId = translations::getParentIdForDotDelimitedKey($key, $lang);
+		$result = translations::get(array(), array(), "key = '{$endKey}' AND language = '{$lang}' AND parent_id = {$parentId}");
+		if(empty($result)){
+			translations::append(array(
+				array(
+					'key' => $endKey,
+					'parent_id' => $parentId,
+					'language' => $lang,
+					'value' => $value
+				)
+			));
+		}else{
+			die('Key existiert bereits...');
+		}
 		$converter = new converter();
 		echo $converter->getKeyFormated($adapter, $key, $value);
 		exit;

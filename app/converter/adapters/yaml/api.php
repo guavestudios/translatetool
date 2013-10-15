@@ -18,6 +18,10 @@ class yaml{
 		);
 	}
 	
+	public function outputKey($key){
+		return '{{ \''.$key.'\' | trans }}';
+	}
+	
 	public function load($file){
 		if(!file_exists($file)){
 			throw new \Exception("File {$file} not found");
