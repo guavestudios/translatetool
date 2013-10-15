@@ -129,3 +129,17 @@ input.value{
 .keyContainer{
 	padding: 10px;
 }
+
+#searchTable{
+	width: 100%;
+}
+
+#searchTable tr:first-child td{
+	font-weight: bold;
+}
+
+#searchTable td{
+	padding: 5px;
+	border-bottom: #eee solid 1px;
+	vertical-align: top;
+}
