@@ -164,6 +164,21 @@ class controller{
 				file_put_contents($savePath, $output['file']);
 			}
 		}
+        if(config::get('exports_combined')){
+            foreach(config::get('exports_combined') as $export) {
+                $outputs = array();
+                foreach(config::get('languages') as $lang) {
+                    $exportPlain = true;
+                    if(isset($export['raw']) and $export['raw'] == 'true') {
+                        $exportPlain = false;
+                    }
+                    $outputs[$lang] = translations::getTree($exportPlain, 0, "language = '{$lang}' OR language IS NULL");
+                }
+                $output = $converter->save($export['adapter'], $outputs);
+                $savePath = str_replace("{doc_root}", $_SERVER['DOCUMENT_ROOT'], $export['path']);
+                file_put_contents($savePath, $output['file']);
+            }
+        }
 		echo 'done';
 	}
 	

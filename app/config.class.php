@@ -9,7 +9,7 @@ class config{
 		if(!self::$cfg){
 			self::$cfg = self::readConfig();
 		}
-		return self::$cfg[$key];
+		return isset(self::$cfg[$key]) ? self::$cfg[$key] : null;
 	}
 	
 	private static function readConfig(){

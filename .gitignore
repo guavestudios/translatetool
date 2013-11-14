@@ -2,3 +2,4 @@
 /app/db/dblog.sqlite
 /app/config.json
 /app/db/*.sqlite
+/.idea
