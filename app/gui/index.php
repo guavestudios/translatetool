@@ -45,6 +45,8 @@ Flight::route('/dump', array('controller', 'dump'));
 Flight::route('/importCSV', array('controller', 'importCSV'));Flight::route('/update', array('controller', 'updateDb'));
 Flight::route('/search', array('controller', 'search'));
 Flight::route('/convert', array('controller', 'convertKey'));
+Flight::route('/import', array('controller', 'import'));
+
 class controller{
 
 	public static function addFolder(){
@@ -180,7 +182,7 @@ class controller{
                 file_put_contents($savePath, $output['file']);
             }
         }
-		echo 'done';
+		//echo 'done';
 	}
 
     public static function downloadCSV(){
@@ -252,31 +254,40 @@ class controller{
         }
     }
 
-	public static function importCSV(){
+	public static function importCSV($csvPath = null){
 		$converter = new converter();
-        $csvPath = $_SERVER['DOCUMENT_ROOT'].config::get('base').'castle_trans.csv';
+        if($csvPath === null or !file_exists($csvPath)){
+            $csvPath = $_SERVER['DOCUMENT_ROOT'].config::get('base').'castle_trans.csv';
+        }
 		$csv = $converter->load('csv', $csvPath);
 		$allGermanTranslations = translations::getTree(true, 0, "language = 'de' OR language IS NULL");
 		$allEnglishTranslations = translations::getTree(true, 0, "language = 'en' OR language IS NULL");
 		$allPossibleTranslations = self::emptyArrayValues($allGermanTranslations);
-		//var_dump(self::array_diff_key_recursive($csv, $allGermanTranslations));exit;
 		$allEnglishTranslations = array_replace_recursive($allPossibleTranslations, $allEnglishTranslations, $csv);
-        /*
-		var_dump(self::array_diff_key_recursive($allEnglishTranslations, $allGermanTranslations));
-		var_dump(self::array_diff_key_recursive($allGermanTranslations, $allEnglishTranslations));exit;
-        */
+        $missmatches = array();
+        $missmatches = array_merge_recursive($missmatches, self::array_diff_key_recursive($allEnglishTranslations, $allGermanTranslations));
+        $missmatches = array_merge_recursive($missmatches, self::array_diff_key_recursive($allGermanTranslations, $allEnglishTranslations));
+
+        if(!empty($missmatches)){
+            return $missmatches;
+        }
+
         $csv = new \parseCSV;
         $csv->linefeed = "\n";
         $csv->delimiter = ";";
         $csv->parse($csvPath);
 
         foreach($csv->data as $row){
-            self::insertDotDelimitedKeyValue($row['key'], $row['trans'], 'en', true);
+            foreach(config::get('languages') as $lang){
+                if(isset($row[$lang])){
+                    self::insertDotDelimitedKeyValue($row['key'], $row[$lang], $lang, true);
+                }
+            }
         }
 
-		echo 'done';
+		return array();
 	}
-	
+
 	private static function array_diff_key_recursive(array $arr1, array $arr2) {
 		$diff = array_diff_key($arr1, $arr2);
 		$intersect = array_intersect_key($arr1, $arr2);
@@ -351,7 +362,17 @@ class controller{
 		$results = translations::searchForKey($searchString);
 		self::render('search', array('results' => $results, 'active' => 0));
 	}
-	
+
+    public static function import(){
+        $imported = false;
+        $conflicts = array();
+        if(isset($_FILES['csv']['name'])){
+            $conflicts = self::importCSV($_FILES['csv']['tmp_name']);
+            $imported = true;
+        }
+        self::render('import', array('imported' => $imported, 'conflicts' => $conflicts, 'active' => 0));
+    }
+
 	private static function render($template, $vars = array()){
 		Flight::render($template, $vars, 'body_content');
 		Flight::render('layout', $vars);

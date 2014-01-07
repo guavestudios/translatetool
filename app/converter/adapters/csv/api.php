@@ -16,7 +16,7 @@ class csv{
             $csvArray = array_merge_recursive($csvArray, $this->array_filter_recursive($a));
         }
         $csv = array();
-
+        $csv[] = implode(";", array_merge(array('key'), \config::get('languages')));
         foreach($csvArray as $key => $row){
             $rows = '';
             foreach(\config::get('languages') as $l){
@@ -48,7 +48,11 @@ class csv{
 
 		$newArray = array();
 		foreach($csv->data as $k => $row){
-			$newArray = array_replace_recursive($newArray, $this->insertDotDelimitedArray($row['key'], $row['trans']));
+            foreach(\config::get('languages') as $l){
+                if(isset($row[$l])){
+			        $newArray = array_replace_recursive($newArray, $this->insertDotDelimitedArray($row['key'], $row[$l]));
+                }
+            }
 		}
 		return $newArray;
 	}

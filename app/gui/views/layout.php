@@ -45,8 +45,9 @@
                             <?php if(config::get('export_download')): ?>
                                 <a href="download">Download</a> |
                             <?php endif ?>
-							<a href="update?bounceback=<?= $bounceback ?>">Update</a> | 
-							<a href="logout">Logout</a>
+                            <a href="import">Import</a>
+                            <!-- <a href="update?bounceback=<?= $bounceback ?>">Update</a> |-->
+							<!-- <a href="logout">Logout</a> -->
 						</span>
 						<form action="search" method="post">
 							<input type="text" name="search" value="<?= isset($_POST['search']) ? $_POST['search'] : '' ?>" placeholder="Search" id="searchField">
