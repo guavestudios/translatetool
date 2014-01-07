@@ -25,12 +25,16 @@
 		{
 			"adapter": "json",
 			"path": "{doc_root}/translation.json"
-		},
-		{
-			"adapter": "yaml",
-			"path": "{doc_root}/translation.yml"
 		}
 	],
+    "exports_combined": [
+        {
+            "adapter": "csv",
+            "path": "{doc_root}/translation.csv"
+        }
+    ],
+    "export_key_adapter": "yaml",
+    "export_download": "exports_combined:0",
 	"fields":[
 		"key TEXT",
 		"value TEXT",
