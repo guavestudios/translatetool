@@ -143,3 +143,8 @@ input.value{
 	border-bottom: #eee solid 1px;
 	vertical-align: top;
 }
+
+#searchField{
+    float: right;
+    margin: 2px 0;
+}

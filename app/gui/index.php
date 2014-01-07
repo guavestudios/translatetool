@@ -37,6 +37,7 @@ Flight::route('/edit/folder/@editId', array('controller','showEditFolder'));
 Flight::route('/del/folder/@delId', array('controller','delFolder'));
 
 Flight::route('/export', array('controller','export'));
+Flight::route('/download', array('controller','downloadCSV'));
 Flight::route('/delete/@keyId/@active', array('controller','deleteKey'));
 
 Flight::route('/poll', array('controller', 'poll'));
@@ -181,7 +182,23 @@ class controller{
         }
 		echo 'done';
 	}
-	
+
+    public static function downloadCSV(){
+        self::export();
+        $downloadConfig = config::get('export_download');
+        if(empty($downloadConfig)){
+            die('No download configured');
+        }
+        list($type, $key) = explode(":", $downloadConfig);
+        $tmp = config::get($type);
+        $downloadInfo = $tmp[$key];
+        $path = str_replace("{doc_root}", $_SERVER['DOCUMENT_ROOT'], $downloadInfo['path']);
+        header("Content-Type: application/octet-stream");
+        header("Content-Transfer-Encoding: Binary");
+        header("Content-disposition: attachment; filename=\"".basename($path)."\"");
+        echo readfile($path);
+    }
+
 	public static function dump(){
 		$converter = new converter();
 		$output = $converter->save('json', translations::get());
@@ -195,47 +212,68 @@ class controller{
 			echo 'The Translatetool needs to have the value in "export_key_adapter" set.';
 			exit;
 		}
-		$languages = config::get('languages');
-		$lang = $languages[0];
 		$value = $_POST['value'];
 		$key = $_POST['key'];
-		$keys = explode(".", $key);
-		$endKey = end($keys);
-		$parentId = translations::getParentIdForDotDelimitedKey($key, $lang);
-		$result = translations::get(array(), array(), "key = '{$endKey}' AND language = '{$lang}' AND parent_id = {$parentId}");
-		if(empty($result)){
-			translations::append(array(
-				array(
-					'key' => $endKey,
-					'parent_id' => $parentId,
-					'language' => $lang,
-					'value' => $value
-				)
-			));
-		}else{
-			die('Key existiert bereits...');
-		}
+        self::insertDotDelimitedKeyValue($key, $value);
 		$converter = new converter();
 		echo $converter->getKeyFormated($adapter, $key, $value);
 		exit;
 	}
-	
+
+    private static function insertDotDelimitedKeyValue($key, $value, $lang = null, $replace = false){
+        if(!$lang){
+            $languages = config::get('languages');
+            $lang = $languages[0];
+        }
+        $keys = explode(".", $key);
+        $endKey = end($keys);
+        $parentId = translations::getParentIdForDotDelimitedKey($key, $lang);
+        $result = translations::get(array(), array(), "key = '{$endKey}' AND language = '{$lang}' AND parent_id = {$parentId}");
+        if(empty($result)){
+            translations::append(array(
+                array(
+                    'key' => $endKey,
+                    'parent_id' => $parentId,
+                    'language' => $lang,
+                    'value' => $value
+                )
+            ));
+        }else if($replace){
+            translations::update($result[0]['id'],
+                array(
+                    'key' => $endKey,
+                    'parent_id' => $parentId,
+                    'language' => $lang,
+                    'value' => $value
+                )
+            );
+        }else{
+            die('Key existiert bereits...');
+        }
+    }
+
 	public static function importCSV(){
 		$converter = new converter();
-		$csv = $converter->load('csv', $_SERVER['DOCUMENT_ROOT'].'/castle_trans.csv');
+        $csvPath = $_SERVER['DOCUMENT_ROOT'].config::get('base').'castle_trans.csv';
+		$csv = $converter->load('csv', $csvPath);
 		$allGermanTranslations = translations::getTree(true, 0, "language = 'de' OR language IS NULL");
 		$allEnglishTranslations = translations::getTree(true, 0, "language = 'en' OR language IS NULL");
 		$allPossibleTranslations = self::emptyArrayValues($allGermanTranslations);
 		//var_dump(self::array_diff_key_recursive($csv, $allGermanTranslations));exit;
 		$allEnglishTranslations = array_replace_recursive($allPossibleTranslations, $allEnglishTranslations, $csv);
-		/*
+        /*
 		var_dump(self::array_diff_key_recursive($allEnglishTranslations, $allGermanTranslations));
 		var_dump(self::array_diff_key_recursive($allGermanTranslations, $allEnglishTranslations));exit;
-		*/
-		$de = $converter->save('csv', $allGermanTranslations);
-		$en = $converter->save('csv', $allEnglishTranslations);
-		file_put_contents($_SERVER['DOCUMENT_ROOT'].'/castle_german_export.csv', $de['file']);
-		file_put_contents($_SERVER['DOCUMENT_ROOT'].'/castle_english_export.csv', $en['file']);
+        */
+        $csv = new \parseCSV;
+        $csv->linefeed = "\n";
+        $csv->delimiter = ";";
+        $csv->parse($csvPath);
+
+        foreach($csv->data as $row){
+            self::insertDotDelimitedKeyValue($row['key'], $row['trans'], 'en', true);
+        }
+
 		echo 'done';
 	}
 	
