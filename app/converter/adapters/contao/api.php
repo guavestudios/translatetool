@@ -58,9 +58,9 @@ class contao{
 				$rows = array_merge($rows, $this->buildVarName($row, $currentKeys, $useNewline, $returnValue));
 			}else{
 				if($returnValue){
-					$rows[] = "\$GLOBALS".implode("", $currentKeys)." = '".str_replace("'", "\'", $row)."';".$newLineChar;
+					$rows[] = "\$GLOBALS['TL_LANG']".implode("", $currentKeys)." = '".str_replace("'", "\'", $row)."';".$newLineChar;
 				}else{
-					$rows[] = "\$GLOBALS".implode("", $currentKeys).";".$newLineChar;
+					$rows[] = "\$GLOBALS['TL_LANG']".implode("", $currentKeys).";".$newLineChar;
 				}
 			}
 		}
