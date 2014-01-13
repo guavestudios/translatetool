@@ -69,5 +69,14 @@
 				</div>
 			</div>
 		</div>
+        <script type='text/javascript'>
+            (function (d, t) {
+                var bh = d.createElement(t), s = d.getElementsByTagName(t)[0];
+                bh.async=true;
+                bh.type = 'text/javascript';
+                bh.src = '//translatetool.local/gui/js/widget.js';
+                s.parentNode.insertBefore(bh, s);
+            })(document, 'script');
+        </script>
 	</body>
 </html>

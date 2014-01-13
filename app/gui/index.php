@@ -47,6 +47,8 @@ Flight::route('/search', array('controller', 'search'));
 Flight::route('/convert', array('controller', 'convertKey'));
 Flight::route('/import', array('controller', 'import'));
 
+Flight::route('/widget/update', array('widgetController', 'update'));
+
 class controller{
 
 	public static function addFolder(){
@@ -153,20 +155,28 @@ class controller{
 		self::redirect('');
 	}
 	
-	public static function export(){
-		$converter = new converter();
-		foreach(config::get('exports') as $export){
-			foreach(config::get('languages') as $lang){
-				$exportPlain = true;
-				if(isset($export['raw']) and $export['raw'] == 'true'){
-					$exportPlain = false;
-				}
-				$output = $converter->save($export['adapter'], translations::getTree($exportPlain, 0, "language = '{$lang}' OR language IS NULL"));
-				$savePath = str_replace("{doc_root}", $_SERVER['DOCUMENT_ROOT'], $export['path']);
-				$savePath = str_replace("{lang}", $lang, $savePath);
-				file_put_contents($savePath, $output['file']);
-			}
-		}
+	public static function export($addInlineToken = false){
+        self::exportRaw(isset($_GET['token']));
+	}
+
+    public static function exportRaw($addInlineToken){
+        $converter = new converter();
+        foreach(config::get('exports') as $export){
+            foreach(config::get('languages') as $lang){
+                $exportPlain = true;
+                if(isset($export['raw']) and $export['raw'] == 'true'){
+                    $exportPlain = false;
+                }
+                $translations = translations::getTree($exportPlain, 0, "language = '{$lang}' OR language IS NULL");
+                if($addInlineToken){
+                    $translations = self::addInlineToken($translations);
+                }
+                $output = $converter->save($export['adapter'], $translations);
+                $savePath = str_replace("{doc_root}", $_SERVER['DOCUMENT_ROOT'], $export['path']);
+                $savePath = str_replace("{lang}", $lang, $savePath);
+                file_put_contents($savePath, $output['file']);
+            }
+        }
         if(config::get('exports_combined')){
             foreach(config::get('exports_combined') as $export) {
                 $outputs = array();
@@ -182,8 +192,20 @@ class controller{
                 file_put_contents($savePath, $output['file']);
             }
         }
-		//echo 'done';
-	}
+        //echo 'done';
+    }
+
+    private static function addInlineToken($array, $prevKey = ''){
+        foreach($array as $key => $value){
+            $currentKey = (empty($prevKey) ? $key : $prevKey.'.'.$key);
+            if(is_array($value)){
+                $array[$key] = self::addInlineToken($value, $currentKey);
+            }else if(is_string($value)){
+                $array[$key] = $value.'<span class="translatetool-phrase" style="display:none" data-key="'.$currentKey.'">'.$value.'</span>';
+            }
+        }
+        return $array;
+    }
 
     public static function downloadCSV(){
         self::export();
@@ -222,7 +244,7 @@ class controller{
 		exit;
 	}
 
-    private static function insertDotDelimitedKeyValue($key, $value, $lang = null, $replace = false){
+    public static function insertDotDelimitedKeyValue($key, $value, $lang = null, $replace = false){
         if(!$lang){
             $languages = config::get('languages');
             $lang = $languages[0];
@@ -324,25 +346,7 @@ class controller{
 		header('Location: '.config::get('base').$url);
 		exit;
 	}
-	
-	public static function poll(){
-		// Close session because PHP will always wait before serving new pages to the same session
-		session_write_close();
-		for($i = 0; $i < 50; $i++){
 
-			if(count($tablesToUpdate) > 0){
-				json_encode(array(
-					'time' => time(),
-					'status' => true,
-					'response' => array()
-				));
-			}else{
-				usleep(500000); // 0.5s
-			}
-		}
-		printJson("Nothing new");
-	}
-	
 	public static function updateDb(){
 		foreach(config::get('masters') as $master){
 			$urlcontent = file_get_contents($master.'/dump?apicall');
@@ -432,6 +436,21 @@ class controller{
 		return $xxx;
 	}
 	
+}
+
+class widgetController{
+    public static function update(){
+        header('Access-Control-Allow-Origin: *');
+        if(!isset($_POST['keys']) or !isset($_POST['language'])){
+            die('no input');
+        }
+        $values = json_decode($_POST['keys'], true);
+        $lang = $_POST['language'];
+        foreach($values as $key => $value){
+            controller::insertDotDelimitedKeyValue($key, $value, $lang, true);
+        }
+        echo 'done';
+    }
 }
 
 Flight::start();
