@@ -59,3 +59,26 @@ Explanation:
 - **export_key_adapter**: Used by the Sublime Guave Translation plugin to insert a phrase and return the key in the syntax of the given adapter.
 - **export_download**: Defines what adapter will be used to deliver the downloadable file. Syntax: {configuration key}:{array index}.
 - **fields**: The fields that are created when the database is created from scratch. You usually will not need to change these fields.
+
+Inline Widget
+====
+```html
+<script type='text/javascript'>
+	window.translateToolConfig = {
+		language: "{{ app.request.locale }}",
+		instanceUrl: "http://translatetool.local"
+	};
+	(function (d, t) {
+		var tt = d.createElement(t), s = d.getElementsByTagName(t)[0];
+		tt.async=true;
+		tt.type = 'text/javascript';
+		tt.src = '//translatetool.local/gui/js/widget.js';
+		s.parentNode.insertBefore(tt, s);
+	})(document, 'script');
+</script>
+```
+```yml
+# /app/config.yml
+twig:
+    autoescape: false
+```
