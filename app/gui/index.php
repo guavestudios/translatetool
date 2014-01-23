@@ -115,10 +115,11 @@ class controller{
 			$value = $_POST['value'][$k];
 			$id = $_POST['id'][$k];
 			$language = $_POST['language'][$k];
-			if(empty($id) and empty($value) and empty($key)){
+            // Can't use empty() on value and key because then '0' can't be used as value
+			if(empty($id) and $value == '' and $key == ''){
 				continue;
 			}
-			if(empty($id) and !empty($value) and !empty($key)){
+			if(empty($id) and $value !== '' and $key !== ''){
 				$entries[] = array(
 					'parent_id' => $keyId,
 					'key' => $key,
@@ -126,7 +127,7 @@ class controller{
 					'language' => $language
 				);
 			}
-			if(!empty($id) and !empty($value) and !empty($key)){
+			if(!empty($id) and $value !== '' and $key !== ''){
 				translations::update($id, array(
 					'key' => $key,
 					'value' => $value
