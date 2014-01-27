@@ -19,11 +19,13 @@
 				</div>
 				<?php endforeach; ?>
 			<?php else: ?>
-				<?= $language ?>
-				<input type="text" name="key[]" value="<?= $key['keyName']; ?>" placeholder="Key" class="key"> 
-				<input type="text" name="value[]" value="" placeholder="Wert" class="value">
-				<input type="hidden" name="language[]" value="<?= $language; ?>">
-				<input type="hidden" name="id[]" value="">
+                <div>
+                    <?= $language ?>
+                    <input type="text" name="key[]" value="<?= $key['keyName']; ?>" placeholder="Key" class="key">
+                    <input type="text" name="value[]" value="" placeholder="Wert" class="value">
+                    <input type="hidden" name="language[]" value="<?= $language; ?>">
+                    <input type="hidden" name="id[]" value="">
+                </div>
 			<?php endif; ?>
 			<?php endforeach; ?>
 			</div>
