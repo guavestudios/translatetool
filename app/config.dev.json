@@ -9,21 +9,14 @@
 			"roles": [
 				"admin"
 			]
-		},
-		{
-			"username": "user",
-			"passwd": "user",
-			"roles": [
-				"client"
-			]
 		}
 	],
 	"masters": [
-		"http://translatetool-master.local"
+
 	],
 	"exports": [
 		{
-			"adapter": "json",
+			"adapter": "yml",
 			"path": "{doc_root}/translation.json"
 		}
 	],
