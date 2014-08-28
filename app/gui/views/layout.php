@@ -69,12 +69,22 @@
 				</div>
 			</div>
 		</div>
+        <!--
         <script type='text/javascript'>
             (function (d, t) {
                 var bh = d.createElement(t), s = d.getElementsByTagName(t)[0];
                 bh.async=true;
                 bh.type = 'text/javascript';
                 bh.src = '//translatetool.local/gui/js/widget.js';
+                s.parentNode.insertBefore(bh, s);
+            })(document, 'script');
+        </script>
+        -->
+        <script type='text/javascript'>
+            (function (d, t) {
+                var bh = d.createElement(t), s = d.getElementsByTagName(t)[0];
+                bh.type = 'text/javascript';
+                bh.src = '//www.bugherd.com/sidebarv2.js?apikey=f0gxzm2anyfnnm45tjsonq';
                 s.parentNode.insertBefore(bh, s);
             })(document, 'script');
         </script>
