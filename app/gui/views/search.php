@@ -13,7 +13,7 @@
 		<tr>
 			<td><?= htmlspecialchars($result['key']) ?></td>
 			<td><?= htmlspecialchars($result['value']) ?></td>
-			<td><a href="key/<?= $result['folder_id'] ?>"><?= $result['folder_name'] ?></a></td>
+			<td><a href="key/<?= $result['folder_id'] ?>#row_<?= $result['id'] ?>"><?= $result['folder_name'] ?></a></td>
 		</tr>
 	<?php endforeach ?>
 <?php endif; ?>

@@ -130,6 +130,15 @@ input.value{
 	padding: 10px;
 }
 
+.inputvalues a{
+    display: inline-block;
+    width: 30px;
+    color: black;
+}
+.inputvalues a:hover{
+    text-decoration: none;
+}
+
 #searchTable{
 	width: 100%;
 }

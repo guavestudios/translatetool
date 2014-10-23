@@ -7,8 +7,8 @@
 			<?php foreach(config::get('languages') as $language): ?>
 			<?php if(isset($key[$language])): $k = $key[$language]; ?>
 				<?php foreach($k as $row): ?>
-				<div>
-					<?= $language ?>
+				<div id="row_<?= $row['id'] ?>">
+                    <a name="row_<?= $row['id'] ?>"><?= $language ?></a>
 					<input type="hidden" name="language[]" value="<?= $row['language']; ?>">
 					<input type="text" name="key[]" value="<?= $row['key']; ?>"> 
 					<input type="text" name="value[]" value="<?= htmlspecialchars($row['value']); ?>" class="value">
@@ -20,7 +20,7 @@
 				<?php endforeach; ?>
 			<?php else: ?>
                 <div>
-                    <?= $language ?>
+                    <a><?= $language ?></a>
                     <input type="text" name="key[]" value="<?= $key['keyName']; ?>" placeholder="Key" class="key">
                     <input type="text" name="value[]" value="" placeholder="Wert" class="value">
                     <input type="hidden" name="language[]" value="<?= $language; ?>">
@@ -32,7 +32,7 @@
 		<?php endforeach; ?>
 		<div class="keyContainer">
 		<?php $l = config::get('languages'); ?>
-		<?= reset($l); ?>
+		<a><?= reset($l); ?></a>
 		<input type="text" name="key[]" value="" placeholder="Key" class="key"> 
 		<input type="text" name="value[]" value="" placeholder="Wert" class="value">
 		<input type="hidden" name="language[]" value="<?= reset($l); ?>">

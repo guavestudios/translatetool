@@ -1,5 +1,5 @@
 $(function(){
-	
+	highlight(document.location.hash);
 });
 
 function startPoll(){
@@ -30,4 +30,11 @@ function startPoll(){
 			setTimeout(2000, startPoll);
 		}
 	});
+}
+
+function highlight(elemId){
+    var elem = $(elemId);
+    elem.css("backgroundColor", "#ffffff"); // hack for Safari
+    elem.animate({ backgroundColor: '#ffffaa' }, 1500);
+    setTimeout(function(){$(elemId).animate({ backgroundColor: "#ffffff" }, 3000)},1000);
 }

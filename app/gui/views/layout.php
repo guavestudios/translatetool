@@ -7,13 +7,14 @@
 		<link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
 		<link href="gui/css/styles.css" rel="stylesheet" type="text/css">
 		<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+		<script type="text/javascript" src="//code.jquery.com/color/jquery.color-2.1.2.min.js"></script>
 		<script type="text/javascript" src="gui/js/main.js"></script>
 		<script>
 			<?php $l = config::get('languages'); ?>
 			$(function(){
 				$('.keyform').on('keypress', 'input', function (e) {
 				  if (e.which == 13) {
-					$('.inputvalues').append('<div class="keyContainer"><?= reset($l); ?><input type="text" name="key[]" value="" placeholder="Key" class="key"> '+
+					$('.inputvalues').append('<div class="keyContainer"><a><?= reset($l); ?></a><input type="text" name="key[]" value="" placeholder="Key" class="key"> '+
 											'<input type="text" name="value[]" value="" placeholder="Wert" class="value">'+
 											'<input type="hidden" name="id[]" value="">'+
 											'<input type="hidden" name="language[]" value="<?= reset($l); ?>"></div>'
