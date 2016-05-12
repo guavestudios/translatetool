@@ -62,7 +62,7 @@ class controller{
 		));
 		self::redirect('key/'.translations::insertId());
 	}
-	
+
 	public static function editFolder(){
 		self::mirror();
 		translations::update($_POST['parent_id'],
@@ -72,12 +72,12 @@ class controller{
 		);
 		self::redirect('key/'.$_POST['parent_id']);
 	}
-	
+
 	public static function delFolder($delId){
 		self::recursiveDelete($delId);
 		self::redirect('overview');
 	}
-	
+
 	private static function recursiveDelete($delId){
 		$items = translations::get(array(),array(),"parent_id = {$delId}");
 		if(!empty($items)){
@@ -87,16 +87,16 @@ class controller{
 		}
 		translations::deleteRow($delId);
 	}
-	
+
 	public static function showAddFolder($parentId){
 		self::render('editfolder', array('active' => $parentId));
 	}
-	
+
 	public static function showEditFolder($editId){
 		$folder = translations::getOne($editId);
 		self::render('editfolder', array('active' => $editId, 'folder' => $folder));
 	}
-	
+
 	public static function deleteKey($keyId, $active){
 		self::mirror();
 		translations::deleteRow($keyId);
@@ -138,7 +138,7 @@ class controller{
 		self::export();
 		self::redirect('key/'.$keyId);
 	}
-	
+
 	public static function overview(){
 		self::render('overview', array('active' => 0));
 	}
@@ -150,12 +150,12 @@ class controller{
 			self::redirect('login');
 		}
 	}
-	
+
 	public static function logout(){
 		auth::logout();
 		self::redirect('');
 	}
-	
+
 	public static function export($addInlineToken = false){
         self::exportRaw(isset($_GET['token']));
 	}
@@ -218,10 +218,10 @@ class controller{
         $tmp = config::get($type);
         $downloadInfo = $tmp[$key];
         $path = str_replace("{doc_root}", $_SERVER['DOCUMENT_ROOT'], $downloadInfo['path']);
-        header("Content-Type: application/octet-stream");
-        header("Content-Transfer-Encoding: Binary");
+        header("Content-Type: text/csv");
         header("Content-disposition: attachment; filename=\"".basename($path)."\"");
-        echo readfile($path);
+				header('Content-Length: ' . filesize($path));
+        readfile($path);
     }
 
 	public static function dump(){
@@ -230,7 +230,7 @@ class controller{
 		header('Content-Type: '.$output['meta']['mime']);
 		echo $output['file'];
 	}
-	
+
 	public static function convertKey(){
 		$adapter = config::get('export_key_adapter');
 		if(empty($adapter)){
@@ -279,34 +279,37 @@ class controller{
 
 	public static function importCSV($csvPath = null){
 		$converter = new converter();
-        if($csvPath === null or !file_exists($csvPath)){
-            $csvPath = $_SERVER['DOCUMENT_ROOT'].config::get('base').'castle_trans.csv';
-        }
+    if($csvPath === null or !file_exists($csvPath)){
+      $csvPath = $_SERVER['DOCUMENT_ROOT'].config::get('base').'castle_trans.csv';
+    }
 		$csv = $converter->load('csv', $csvPath);
+
+		/* TODO: deactivated this check because there is not always de and en
 		$allGermanTranslations = translations::getTree(true, 0, "language = 'de' OR language IS NULL");
 		$allEnglishTranslations = translations::getTree(true, 0, "language = 'en' OR language IS NULL");
 		$allPossibleTranslations = self::emptyArrayValues($allGermanTranslations);
 		$allEnglishTranslations = array_replace_recursive($allPossibleTranslations, $allEnglishTranslations, $csv);
-        $missmatches = array();
-        $missmatches = array_merge_recursive($missmatches, self::array_diff_key_recursive($allEnglishTranslations, $allGermanTranslations));
-        $missmatches = array_merge_recursive($missmatches, self::array_diff_key_recursive($allGermanTranslations, $allEnglishTranslations));
+    $missmatches = array();
+    $missmatches = array_merge_recursive($missmatches, self::array_diff_key_recursive($allEnglishTranslations, $allGermanTranslations));
+    $missmatches = array_merge_recursive($missmatches, self::array_diff_key_recursive($allGermanTranslations, $allEnglishTranslations));
 
-        if(!empty($missmatches)){
-            return $missmatches;
+    if(!empty($missmatches)){
+        return $missmatches;
+    }
+		*/
+
+    $csv = new \parseCSV;
+    $csv->linefeed = "\n";
+    $csv->delimiter = ";";
+    $csv->parse($csvPath);
+
+    foreach($csv->data as $row){
+      foreach(config::get('languages') as $lang){
+        if(isset($row[$lang])){
+          self::insertDotDelimitedKeyValue($row['key'], $row[$lang], $lang, true);
         }
-
-        $csv = new \parseCSV;
-        $csv->linefeed = "\n";
-        $csv->delimiter = ";";
-        $csv->parse($csvPath);
-
-        foreach($csv->data as $row){
-            foreach(config::get('languages') as $lang){
-                if(isset($row[$lang])){
-                    self::insertDotDelimitedKeyValue($row['key'], $row[$lang], $lang, true);
-                }
-            }
-        }
+      }
+    }
 
 		return array();
 	}
@@ -314,20 +317,20 @@ class controller{
 	private static function array_diff_key_recursive(array $arr1, array $arr2) {
 		$diff = array_diff_key($arr1, $arr2);
 		$intersect = array_intersect_key($arr1, $arr2);
-		
+
 		foreach ($intersect as $k => $v) {
 			if (is_array($arr1[$k]) && is_array($arr2[$k])) {
 				$d = self::array_diff_key_recursive($arr1[$k], $arr2[$k]);
-				
+
 				if ($d) {
 					$diff[$k] = $d;
 				}
 			}
 		}
-		
+
 		return $diff;
 	}
-	
+
 	private static function emptyArrayValues(array $array){
 		$newArray = array();
 		foreach($array as $key => $value){
@@ -342,7 +345,7 @@ class controller{
 		public static function login(){
 		Flight::render('login');
 	}
-	
+
 	public static function redirect($url){
 		header('Location: '.config::get('base').$url);
 		exit;
@@ -361,28 +364,28 @@ class controller{
 		}
 		self::redirect('');
 	}
-	
+
 	public static function search(){
 		$searchString = $_POST['search'];
 		$results = translations::searchForKey($searchString);
 		self::render('search', array('results' => $results, 'active' => 0));
 	}
 
-    public static function import(){
-        $imported = false;
-        $conflicts = array();
-        if(isset($_FILES['csv']['name'])){
-            $conflicts = self::importCSV($_FILES['csv']['tmp_name']);
-            $imported = true;
-        }
-        self::render('import', array('imported' => $imported, 'conflicts' => $conflicts, 'active' => 0));
+  public static function import(){
+    $imported = false;
+    $conflicts = array();
+    if(isset($_FILES['csv']['name'])){
+      $conflicts = self::importCSV($_FILES['csv']['tmp_name']);
+      $imported = true;
     }
+    self::render('import', array('imported' => $imported, 'conflicts' => $conflicts, 'active' => 0));
+  }
 
 	private static function render($template, $vars = array()){
 		Flight::render($template, $vars, 'body_content');
 		Flight::render('layout', $vars);
 	}
-	
+
 	private static function mirror(){
 		if(isset($_GET['apicall'])){
 			return false;
@@ -399,7 +402,7 @@ class controller{
 		}
 		return true;
 	}
-	
+
 	private static function post($url, $post = array()){
 		if(substr($url, 0, 7)!="http://"){
 			$url = "http://".$url;
@@ -415,7 +418,7 @@ class controller{
 		curl_close($curl);
 		return $return;
 	}
-	
+
 	private static function asPostString($theData, $theName = null){
 		$thePostString = '';
 		$thePrefix = $theName;
@@ -436,7 +439,7 @@ class controller{
 
 		return $xxx;
 	}
-	
+
 }
 
 class widgetController{
