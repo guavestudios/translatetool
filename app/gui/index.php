@@ -115,7 +115,20 @@ class controller{
 			$value = $_POST['value'][$k];
 			$id = $_POST['id'][$k];
 			$language = $_POST['language'][$k];
-            // Can't use empty() on value and key because then '0' can't be used as value
+
+			//handle basic duplicates in view
+			$duplicate=false;
+			for ($i=$k-1; $i>=0; $i--) {
+				if ($_POST['key'][$i] == $key && $_POST['language'][$i] == $language) {
+					$duplicate = true;
+					break;
+				}
+			}
+			if ($duplicate) {
+				continue;
+			}
+
+			// Can't use empty() on value and key because then '0' can't be used as value
 			if(empty($id) and $value == '' and $key == ''){
 				continue;
 			}
