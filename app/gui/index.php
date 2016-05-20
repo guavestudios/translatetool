@@ -232,17 +232,59 @@ class controller{
 	}
 
 	public static function convertKey(){
-		$adapter = config::get('export_key_adapter');
-		if(empty($adapter)){
-			echo 'The Translatetool needs to have the value in "export_key_adapter" set.';
-			exit;
-		}
+		$adapter = $_POST['adapter']?$_POST['adapter']:config::get('export_key_adapter');
+		$error = "";
+		$output = "";
+
 		$value = $_POST['value'];
 		$key = $_POST['key'];
-        self::insertDotDelimitedKeyValue($key, $value);
-		$converter = new converter();
-		echo $converter->getKeyFormated($adapter, $key, $value);
-		exit;
+		$format = $_GET['format'];
+
+
+		if(empty($adapter)){
+			$error = array("message" => 'The Translatetool needs to have the value in "export_key_adapter" set.');
+		} else if (empty($value)) {
+			$error = array("message" => 'No value was provided');
+		} else if (empty($key)) {
+			$error = array("message" => 'No key was provided');
+		} else if (preg_match("/^([a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]+)+$/", $key)==false) {
+			$error = array("message" => 'Key has the wrong format');
+		}
+
+		if (empty($error)) {
+			$result = self::insertDotDelimitedKeyValue($key, $value);
+			$converter = new converter();
+
+			try {
+				$output = $converter->getKeyFormated($adapter, $key, $value);
+
+				if (!empty($result)) {
+					$error=array(
+						"message" => "Key existiert bereits...",
+						"key" => $key,
+						"keyFormatted" => $output
+					);
+				}
+			} catch (\Exception $ex) {
+				$error= array(
+					"message" => "adapter did not support request",
+					"error" => $ex->getMessage()
+				);
+			}
+		}
+
+		if ($format=="json") {
+			header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+			header('Content-Type: application/json');
+			echo json_encode(array(
+				"status"=>empty($error),
+				"response"=>empty($error)?$output:$error
+			));
+		} else {
+			//obsolte: legacy code (text output)
+			header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+			echo empty($error)?$output:$error["message"];
+		}
 	}
 
     public static function insertDotDelimitedKeyValue($key, $value, $lang = null, $replace = false){
@@ -273,7 +315,11 @@ class controller{
                 )
             );
         }else{
-            die('Key existiert bereits...');
+            return array(
+							"message" => "Key existiert bereits...",
+							"key" => $key,
+							"language" => $lang
+						);
         }
     }
 
