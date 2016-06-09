@@ -1,7 +1,7 @@
 <?php
 
 class translations{
-	
+
 	private static $sql = null;
 	private static $config = null;
 	private static $sql_mode = SQLITE3_ASSOC;
@@ -32,10 +32,10 @@ class translations{
 			");
 		}
 	}
-	
+
 	public static function update($id, $values){
 		$qryStringPrep = array();
-		
+
 		foreach($values as $key => $value){
 			$valuePrep = is_numeric($value) ? $value : "'".self::getSql()->escapeString($value)."'";
 			$qryStringPrep[] = "{$key} = {$valuePrep}";
@@ -45,18 +45,18 @@ class translations{
 			UPDATE ".self::$translationTable." SET ".implode(", ", $qryStringPrep)." WHERE id = {$id}
 		");
 	}
-	
+
 	public static function deleteRow($id){
 		if(!is_numeric($id)){
 			throw new Exception("ID is not numeric (given: '{$id}')");
 		}
 		self::qry("DELETE FROM ".self::$translationTable." WHERE id = {$id}");
 	}
-	
+
 	public static function insertId(){
 		return self::getSql()->lastInsertRowid();
 	}
-	
+
 	public static function get($array = array(), $orderBy = array(), $where = null){
 		$select = empty($array) ? '*' : implode(",", array_unique(array_merge($array, array('id'))));
 		$order = empty($orderBy) ? 'id DESC' : implode(",", $orderBy);
@@ -78,7 +78,7 @@ class translations{
 		}
 		return $result;
 	}
-	
+
 	public static function getTree($plain = false, $root = 0, $where = null){
 		$all = self::get(array(), array('value','key'), $where);
 		$assocKeys = array();
@@ -90,11 +90,11 @@ class translations{
 				$rootKeys[] = $key;
 			}
 		}
-		
+
 		$tree = self::buildTree($rootKeys, $assocKeys, $plain);
 		return $tree;
 	}
-	
+
 	public static function getValues($keyId){
 		$results = self::qry("
 			SELECT
@@ -118,7 +118,7 @@ class translations{
 		}
 		return $result;
 	}
-	
+
 	private static function buildTree($keys, &$assocKeys, $plain){
 		$treePart = array();
 		foreach($keys as $key){
@@ -139,7 +139,7 @@ class translations{
 		}
 		return $treePart;
 	}
-	
+
 	public static function getTreeHtml($active = 0, $tree = null){
 		if($tree === null){
 			$tree = self::getTree();
@@ -182,7 +182,7 @@ class translations{
 		unset($keys[count($keys) - 1]);
 		return self::createFoldersFromDotDelimitedKey(array_values($keys));
 	}
-	
+
 	public static function createFoldersFromDotDelimitedKey($keys, $parentId = 0){
 		if(empty($keys)){
 			return $parentId;
@@ -205,7 +205,7 @@ class translations{
 			return self::createFoldersFromDotDelimitedKey($keys, $result[0]['id']);
 		}
 	}
-	
+
 	private static function getSql(){
 		if(!self::$sql){
 			$error = '';
@@ -213,16 +213,15 @@ class translations{
 			if(!file_exists(__DIR__.'/'.self::config('dbpath'))){
 				$firstRun = true;
 			}
-			if(!self::$sql = new SQLite3(__DIR__.'/'.self::config('dbpath'), 0666, $error)){
-				die($error);
-			}
+			self::$sql = new SQLite3(__DIR__.'/'.self::config('dbpath'));
+			
 			if($firstRun){
 				self::createTable();
 			}
 		}
 		return self::$sql;
 	}
-	
+
 	private static function createTable(){
 		self::getSql()->query("
 			CREATE TABLE IF NOT EXISTS `".self::$translationTable."`(
@@ -256,7 +255,7 @@ class translations{
 			END;
 		");
 	}
-	
+
 	public static function searchForKey($string){
 		$results = self::getSql()->query("
 			SELECT t1.*, t2.id as folder_id, t2.key as folder_name
@@ -273,12 +272,12 @@ class translations{
 		}
 		return $result;
 	}
-	
+
 	private static function qry($qry){
 		$sql = self::getSql();
 		return $sql->query($qry);
 	}
-	
+
 	public static function displayCol($key, $value, $escape = true, $nl2br = true){
 		$el = self::config('displayElements');
 		if($nl2br){
@@ -294,11 +293,11 @@ class translations{
 		}
 		return $tmpl;
 	}
-	
+
 	public static function config($key){
 		return config::get($key);
 	}
-	
+
 	public static function backup($fileIdent = ''){
 		$path = __DIR__.'/'.self::config('dbpath');
 		$file = basename($path);
@@ -308,7 +307,7 @@ class translations{
 		}
 		return copy($path, $dir."/".$fileIdent.time()."_".$file);
 	}
-	
+
 	public static function delete($backup = true, $fileIdent = ''){
 		if($backup){
 			if(!self::backup($fileIdent)){
@@ -318,5 +317,5 @@ class translations{
 		$path = self::config('dbpath');
 		return unlink(__DIR__.'/'.$path);
 	}
-	
+
 }

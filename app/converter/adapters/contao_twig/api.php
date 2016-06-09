@@ -2,8 +2,8 @@
 
 namespace Guave\translatetool;
 
-class contao{
-	
+class contao_twig {
+
 	public function save($content){
 		return array(
 			'file' =>'<?php'."\n\n".implode("", $this->buildVarName($content)),
@@ -13,16 +13,16 @@ class contao{
 			)
 		);
 	}
-	
+
 	public function load($file){
 		die('cannot load from this format yet');
 	}
-	
+
 	public function outputKey($key){
 		$this->insertDotDelimitedArray($key, null);
 		return '{{ lang.'.$key.' }}';
 	}
-	
+
 	private function insertDotDelimitedArray($key, $value, $array = array()){
 		$keys = explode(".", $key);
 		$firstKey = $keys[0];
@@ -42,7 +42,7 @@ class contao{
 		$array[$firstKey] = $this->insertDotDelimitedArray(implode(".", $keys), $value, $array[$firstKey]);
 		return $array;
 	}
-	
+
 	private function buildVarName($content, $keys = array(), $useNewline = true, $returnValue = true){
 		$rows = array();
 		$oldKeys = $keys;
@@ -64,7 +64,7 @@ class contao{
 				}
 			}
 		}
-		
+
 		return $rows;
 	}
 }

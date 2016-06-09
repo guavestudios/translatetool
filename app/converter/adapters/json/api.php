@@ -3,7 +3,7 @@
 namespace Guave\translatetool;
 
 class json{
-	
+
 	public function save($content){
 		return array(
 			'file' =>json_encode($content),
@@ -13,7 +13,7 @@ class json{
 			)
 		);
 	}
-	
+
 	public function load($file){
 		if(!file_exists($file)){
 			throw new \Exception("File {$file} not found");
@@ -25,5 +25,5 @@ class json{
 		}
 		return $return;
 	}
-	
+
 }
