@@ -437,8 +437,13 @@ class controller{
 		// * duplicates
 		// * invalid keynames
 		// * empty values
+		//
+		// $currentPath 	holds the path to the last csv-item
+		// $newPath				holds the path to the next/current csv-item
+		// $commonPath		holds the 'common path' in currentPath that's also in newPath
 		foreach($checkCsvData as $key => $row) {
 
+			$newPath = array();
 			$newPath = explode('.', $row['key']);
 
 			if($currentPath === $newPath) {
@@ -454,14 +459,16 @@ class controller{
 				//Get the intersection of the currentPath and the newPath
 				//If the intersection is equal to the currentPath we know that the new path
 				//is invalid, since a key-value-pair in a folder cannot be at the same time be a 'subfolder'
-				$commonPath = array_intersect($currentPath, $newPath);
+				$commonPath = array();
+				for($i=0; $i < count($currentPath); $i++) {
+					if($currentPath[$i] === $newPath[$i]) $commonPath[] = $currentPath[$i];
+				}
 				if($commonPath && $commonPath == $currentPath) {
 					$oldKey = implode('.', $currentPath);
 					$oldRow;
 					foreach($checkCsvData as $r) {
 						if($r['key'] === $oldKey) $oldRow = $r['row'];
 					}
-					$critFolder[] = implode('.', $commonPath) . ' - ' . implode('.', $currentPath) . ' - ' . implode('.', $newPath);
 					$critFolder[] = 'CRITICAL ERROR: The folder "' . $row['key'] . '" on row ' . $row['row'] . ' is in a folder that is already present as key: ' . implode('.', $currentPath) . ' on row ' . $oldRow;
 				}
 				$currentPath = $newPath;
@@ -550,7 +557,9 @@ class controller{
 		$critical['inCsvNotInDbErrors'] = $critInCsvNotInDb;
 
 		//If there are critical errors return them and abort the import.
-		if(count($critical) > 0) return $critical;
+		foreach($critical as $err) {
+			if(count($err) > 0) return $critical;
+		}
 
     foreach($csv->data as $row){
       foreach(config::get('languages') as $lang){
