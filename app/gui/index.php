@@ -7,6 +7,8 @@ require 'php/curl.class.php';
 require '../config.class.php';
 require '../converter/convert.class.php';
 
+require_once '../converter/adapters/csv/parsecsv.lib.php';
+
 use Guave\translatetool\converter;
 
 date_default_timezone_set("Europe/Zurich");
@@ -329,9 +331,9 @@ class controller{
             );
         }else{
             return array(
-							"message" => "Key existiert bereits...",
-							"key" => $key,
-							"language" => $lang
+							"keyDoesNotExistError" => array(
+								'CRITICAL ERROR: The following key does not exist in the DB "' . $key . '" language ' . $lang
+							)
 						);
         }
     }
@@ -341,7 +343,9 @@ class controller{
     if($csvPath === null or !file_exists($csvPath)){
       $csvPath = $_SERVER['DOCUMENT_ROOT'].config::get('base').'castle_trans.csv';
     }
-		$csv = $converter->load('csv', $csvPath);
+
+		//Old code: this was used to only load the keys of the csv.
+		// $csv = $converter->load('csv', $csvPath);
 
 		/* TODO: deactivated this check because there is not always de and en
 		$allGermanTranslations = translations::getTree(true, 0, "language = 'de' OR language IS NULL");
@@ -357,10 +361,196 @@ class controller{
     }
 		*/
 
+
     $csv = new \parseCSV;
     $csv->linefeed = "\n";
     $csv->delimiter = ";";
     $csv->parse($csvPath);
+
+		$checkCsv = $csv;
+		$checkCsvData = $checkCsv->data;
+
+		//Get all languages from the config
+		$configLang = config::get('languages');
+		sort($configLang);
+
+		//Get all languages from the CSV
+		//The CSV is always built the same way: the first column contains the keys
+		//the rest of the columns the languages. So we can get all the keys of an entry
+		//and delete the first one afterwards (since it contains the keys).
+		$csvLang = array_keys($checkCsvData[0]);
+		array_shift($csvLang);
+		sort($csvLang);
+
+		$warnings = array();
+		$critical = array();
+
+		//Separate containers for critical errors, so all errors of the same type
+		//are in one container.
+		$critMoreLang = array();
+		$critDuplicate = array();
+		$critFolder = array();
+		$critInvalidFormat = array();
+		$critEmptyVal = array();
+		$critInCsvNotInDb = array();
+
+		//Check if we truly only have the specified languages in the csv and nothing more or less
+		//	If the csv has less languages: warn but import
+		//	If the csv has more languages: warn and no import
+		if($configLang != $csvLang) {
+			if(count($configLang) > count($csvLang)) {
+				$warnings[] = 'Import was successful<br>WARNING: The config has defined ' . (count($configLang)-count($csvLang)) . ' more language(s) than the csv provides';
+			} else {
+				$additionalCsvLang = array_diff($csvLang, $configLang);
+				$critMoreLang[] = 'CRITICAL ERROR: The CSV contains more languages than the config has defined: ' . implode(', ', $additionalCsvLang);
+			}
+		}
+
+		//Get all key-value combos from the DB
+		$dbData = translations::get(array(), array('key'));
+
+		//Get all key-value combos for each language from the csv
+		//Format should be:
+		//key: Test			de: test		en: test
+		//Key cannot be same in same folder
+
+		$entryKey;
+		$index = 2;
+		//Prepare data for sorting and save the row of the entries directly into their array
+		//so we can return a reference to the row in case of an error
+		foreach($checkCsvData as $key => $row) {
+			$entryKey[$key] = $row['key'];
+			$checkCsvData[$key]['row'] = $index;
+			$index++;
+		}
+
+		//Sort all the data
+		array_multisort($entryKey, SORT_ASC, $checkCsvData);
+
+		//Remember path to current key
+		$currentPath = array();
+
+		$csvDataTransformed = array();
+		$csvKeys = array();
+
+		// Loop through all entries/rows and test for
+		// * duplicates
+		// * invalid keynames
+		// * empty values
+		foreach($checkCsvData as $key => $row) {
+
+			$newPath = explode('.', $row['key']);
+
+			if($currentPath === $newPath) {
+				foreach($checkCsvData as $ro) {
+					//Search duplicate
+					if(($ro['key'] === implode('.', $currentPath)) && $row['row'] !== $ro['row']) {
+						$dupliRow = $ro['row'];
+					}
+				}
+				$critDuplicate[] = 'CRITICAL ERROR: The key "' . $row['key'] . '" on row ' . $row['row'] . ' and on row ' . $dupliRow . ' is a duplicate.';
+			} else {
+				//Test if key-parent-id-language already exists in DB when trying to create a new folder in same hierarchy
+				//Get the intersection of the currentPath and the newPath
+				//If the intersection is equal to the currentPath we know that the new path
+				//is invalid, since a key-value-pair in a folder cannot be at the same time be a 'subfolder'
+				$commonPath = array_intersect($currentPath, $newPath);
+				if($commonPath && $commonPath == $currentPath) {
+					$oldKey = implode('.', $currentPath);
+					$oldRow;
+					foreach($checkCsvData as $r) {
+						if($r['key'] === $oldKey) $oldRow = $r['row'];
+					}
+					$critFolder[] = implode('.', $commonPath) . ' - ' . implode('.', $currentPath) . ' - ' . implode('.', $newPath);
+					$critFolder[] = 'CRITICAL ERROR: The folder "' . $row['key'] . '" on row ' . $row['row'] . ' is in a folder that is already present as key: ' . implode('.', $currentPath) . ' on row ' . $oldRow;
+				}
+				$currentPath = $newPath;
+			}
+
+			//	Test that all keys from the csv are valid
+			//	Invalid are keys that contain no dot (this would be root-folders) or
+			//	who contain a space.
+			if(!preg_match("/^([a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]+)+$/", $row['key'])) {
+				$critInvalidFormat[] = 'CRITICAL ERROR: The key "' . $row['key'] . '" on row ' . $row['row'] . ' has an invalid format.';
+			};
+			//	Get all keys from the csv without values
+			foreach($configLang as $i => $l) {
+				if(array_key_exists($l, $row) && !$row[$l]) {
+					$critEmptyVal[] = 'CRITICAL ERROR: The key "' . $row['key'] . '" on row ' . $row['row'] . ' for the language "' . $l . '" is empty.';
+				}
+			}
+
+			//Save values to an array where the key is the path
+			//and the element an array containing only the values for
+			//the different languages.
+			foreach($row as $k => $v) {
+				//Do not row-number or key to the new array
+				if($k === 'row' || $k === 'key') continue;
+				$csvDataTransformed[$row['key']][$k] = $row[$k];
+			}
+			$csvKeys[] = $row['key'];
+		}
+
+		//Prepare the dbData to have the same structure as the csv-data so we can later
+		//easily compare the two datasets.
+		//We create a new array whose index of the elements is the same as the id
+		//of the db-entries.
+		$dbDataIndexed = array();
+		foreach($dbData as $k => $v) {
+			$dbDataIndexed[$v['id']] = $v;
+		}
+		$dbDataTransformed = array();
+		$dbKeys = array();
+
+		//Loop through the indexed Array with DB-Data.
+		foreach($dbDataIndexed as $k => $v) {
+			//If the value of the element is null we are in a folder and have to do nothing.
+			if($v['value'] === null) continue;
+
+			//Store the key of the element in the path.
+			$path = $v['key'];
+
+			//If the parent_id is bigger than 0 we are in a single entry
+			if($v['parent_id'] > 0) {
+				//Get the 'parent-element' of the entry
+				$el = $dbDataIndexed[$v['parent_id']];
+				//While the element has a parent prepend the key of the parent-element
+				//to the path and save the parent-element as the new element
+				while($el['parent_id'] > 0) {
+					$path = $el['key'] . '.' . $path;
+					$el = $dbDataIndexed[$el['parent_id']];
+				}
+				//Prepend the key of the last element (that is the root folder)
+				$path = $el['key'] . '.' . $path;
+			}
+			//Store the whole element in the array, with the path as the key.
+			$dbDataTransformed[$path][$v['language']] = $v['value'];
+			if(!in_array($path, $dbKeys)) $dbKeys[] = $path;
+		}
+
+		//Get all errors
+		//	Get all keys that are in the DB but are missing in the csv
+		$inDbNotInCsv = array_diff($dbKeys, $csvKeys);
+		if(count($inDbNotInCsv) > 0) {
+			$warning[] = 'WARNING: The following keys are stored in the DB but not provided in the CSV: ' . implode('<br>', $inDbNotInCsv);
+		}
+		//	Get all keys that are in the csv but not in the DB
+		//	TODO:	Save them if the flag that new values are allowed is set
+		$inCsvNotInDb = array_diff($csvKeys, $dbKeys);
+		if(count($inCsvNotInDb) > 0) {
+			$critInCsvNotInDb[] = 'CRITICAL ERROR: The following keys are provided in the CSV but not found in the DB: <br>' . implode('<br>', $inCsvNotInDb);
+		}
+
+		//Combine all critical errors in one array.
+		$critical['tooManyLangErrors'] = $critMoreLang;
+		$critical['duplicateErrors'] = $critDuplicate;
+		$critical['folderIsFileErrors'] = $critFolder;
+		$critical['invalidFormatErrors'] = $critInvalidFormat;
+		$critical['emptyValueErrors'] = $critEmptyVal;
+		$critical['inCsvNotInDbErrors'] = $critInCsvNotInDb;
+
+		//If there are critical errors return them and abort the import.
+		if(count($critical) > 0) return $critical;
 
     foreach($csv->data as $row){
       foreach(config::get('languages') as $lang){
@@ -369,7 +559,8 @@ class controller{
         }
       }
     }
-
+		//If there are any warnings return them
+		if(count($warnings) > 0) return $warnings;
 		return array();
 	}
 

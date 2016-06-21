@@ -57,6 +57,18 @@ class translations{
 		return self::getSql()->lastInsertRowid();
 	}
 
+	/**
+	 * Gets data from the SQLite-DB.
+	 *
+	 * @param		array   $array   		Array containing all the columns from which the data should
+	 *                           		be retrieved (basically, it indicates the params for the SELECT-
+	 *                            	clause in the SQL-Statement). Defaults to * if empty.
+	 * @param		array   $orderBy		Array, containing the params for the ORDER BY-Clause.
+	 * @return	string  $where			String, containing all the WHERE-params for the SQL-Clause
+	 *                          		eg. "language='de'".
+	 *                           		Defaults to null, so no conditions are passed.
+	 * @return	array								An array containing each row of the resulting query.
+	 */
 	public static function get($array = array(), $orderBy = array(), $where = null){
 		$select = empty($array) ? '*' : implode(",", array_unique(array_merge($array, array('id'))));
 		$order = empty($orderBy) ? 'id DESC' : implode(",", $orderBy);
@@ -79,9 +91,38 @@ class translations{
 		return $result;
 	}
 
+	/**
+	 * Gets a tree out of DB-Data.
+	 *
+	 * @param  boolean	$plain	Defines if only key-value combos should be returned
+	 *                        	or key-object combos (the objects contain all data of the entries)
+	 * @param  integer	$root		[description]
+	 * @param  [type]		$where	[description]
+	 * @return [type]						[description]
+	 */
 	public static function getTree($plain = false, $root = 0, $where = null){
 		$all = self::get(array(), array('value','key'), $where);
+		//Multidimensional array holding all the files and subfolders
+		//The first dimension of the array indicates the parent_id, the second one
+		//is a 'normal' array-index
+		//eg. the structure
+		//* folder1
+		//	* file1
+		//	* file2
+		//	* subfolder1
+		//		* file11
+		//		* file12
+		//translates to the array:
+		//$assocKeys
+		//[1][0] folder1 (id=2)
+		//[2][0] file2
+		//[2][1] file2
+		//[2][2] subfolder1 (id=5)
+		//[5][0] file11
+		//[5][1] file12
 		$assocKeys = array();
+
+		//Array containing all folders in the root-level (parent-id === 0)
 		$rootKeys = array();
 		foreach($all as $key){
 			if($key['parent_id'] > 0){
@@ -119,11 +160,28 @@ class translations{
 		return $result;
 	}
 
+	/**
+	 * Builds a tree out of the passed data.
+	 *
+	 * @param  array		$keys      	The 'base' of the tree. Array holds all the
+	 *                            	entries at the root-level of the tree.
+	 * @param  array		$assocKeys 	Array, containing all the 'subentries', that is entries
+	 *                            	that are contained in folders.
+	 * @param  boolean	$plain     	Defines if the value of the entry should be
+	 *                             	stored as only the value or as an array
+	 *                             	with 'value' => true and 'content' => $key
+	 *                             	(where key is an array).
+	 * @return array								[description]
+	 */
 	private static function buildTree($keys, &$assocKeys, $plain){
 		$treePart = array();
 		foreach($keys as $key){
+			//If value === null we know that the entry/$key is a folder
 			if($key['value'] === null){
+				//If we have entries in folders assign it to the tmp-var $subtree, else assign empty array to it.
 				$subtree = isset($assocKeys[$key['id']]) ? $assocKeys[$key['id']] : array();
+				//Check if we want a plain-tree or not.
+				//Then build the treepart with buildTree
 				if($plain){
 					$treePart[$key['key']] = self::buildTree($subtree, $assocKeys, $plain);
 				}else{
@@ -214,7 +272,7 @@ class translations{
 				$firstRun = true;
 			}
 			self::$sql = new SQLite3(__DIR__.'/'.self::config('dbpath'));
-			
+
 			if($firstRun){
 				self::createTable();
 			}

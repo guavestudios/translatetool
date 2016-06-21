@@ -5,7 +5,14 @@
 </form>
 <?php if($imported and !empty($conflicts)): ?>
     <br><span style="color:red">Beim importieren wurden phrasen gefunden die nicht in der Datenbank existieren. Import abgebrochen.</span><br>
-    <pre><?php var_dump($conflicts); ?></pre>
+		<?php foreach($conflicts as $err => $msg) { if(count($msg) === 0) continue;?>
+			<span style="color:red"><?php echo($err); ?></span><br>
+			<ul>
+			<?php foreach($msg as $i => $m) { ?>
+				<li><?php echo($m); ?></li>
+			<?php } ?>
+		</ul>
+		<?php } ?>
 <?php elseif($imported): ?>
     <br><span style="color:green">Erfolgreich importiert.</span>
 <?php endif; ?>
