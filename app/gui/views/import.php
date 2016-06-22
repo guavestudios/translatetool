@@ -4,11 +4,11 @@
 		<input type="checkbox" name="importValuesInCsvNotInDb" id="inCsvNotInDb" value="true"><label for="inCsvNotInDb">Werte, die im CSV aber nicht in der DB vorhanden sind, importieren.</label><br>
     <input type="submit" value="Upload">
 </form>
-<?php if($imported and !empty($conflicts)): ?>
-    <br><span style="color:red">CRITICAL ERROR: Import wurde abgebrochen.</span><br>
-		<?php foreach($conflicts as $err => $msg) {
+<?php if($imported && $countErrors > 0) { ?>
+		<?php foreach($errors as $err => $msg) {
 			//If there are no errors in a "sub-error-array" continue, else display the errors.
 			if(count($msg) === 0) continue;?>
+			<br><span style="color:red">CRITICAL ERROR: Import wurde abgebrochen.</span><br>
 			<span style="color:red"><?php echo($err); ?></span><br>
 			<ul>
 			<?php foreach($msg as $i => $m) { ?>
@@ -16,9 +16,22 @@
 			<?php } ?>
 		</ul>
 		<?php } ?>
-<?php elseif($imported): ?>
+<?php } elseif($imported) { ?>
     <br><span style="color:green">Erfolgreich importiert.</span>
-<?php endif; ?>
+		<?php if($countWarnings > 0) {
+			foreach($warnings as $err => $msg) {
+			//If there are no errors in a "sub-error-array" continue, else display the errors.
+				if(count($msg) === 0) continue;?>
+				<br><span style="color:blue">WARNING</span><br>
+				<span style="color:blue"><?php echo($err); ?></span><br>
+				<ul>
+				<?php foreach($msg as $i => $m) { ?>
+					<li><?php echo($m); ?></li>
+				<?php } ?>
+			</ul>
+		<?php } ?>
+<?php } ?>
+<?php } ?>
 <br>
 <h1>Format</h1>
 <h3>Table</h3>
