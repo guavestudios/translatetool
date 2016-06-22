@@ -1,11 +1,14 @@
 <h1>Import CSV</h1>
 <form method="post" enctype="multipart/form-data">
     <input type="file" name="csv"><br>
+		<input type="checkbox" name="importValuesInCsvNotInDb" id="inCsvNotInDb" value="true"><label for="inCsvNotInDb">Werte, die im CSV aber nicht in der DB vorhanden sind, importieren.</label><br>
     <input type="submit" value="Upload">
 </form>
 <?php if($imported and !empty($conflicts)): ?>
-    <br><span style="color:red">Beim importieren wurden phrasen gefunden die nicht in der Datenbank existieren. Import abgebrochen.</span><br>
-		<?php foreach($conflicts as $err => $msg) { if(count($msg) === 0) continue;?>
+    <br><span style="color:red">CRITICAL ERROR: Import wurde abgebrochen.</span><br>
+		<?php foreach($conflicts as $err => $msg) {
+			//If there are no errors in a "sub-error-array" continue, else display the errors.
+			if(count($msg) === 0) continue;?>
 			<span style="color:red"><?php echo($err); ?></span><br>
 			<ul>
 			<?php foreach($msg as $i => $m) { ?>

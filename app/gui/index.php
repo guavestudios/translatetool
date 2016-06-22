@@ -338,7 +338,7 @@ class controller{
         }
     }
 
-	public static function importCSV($csvPath = null){
+	public static function importCSV($csvPath = null, $importValuesInCsvNotInDb = true){
 		$converter = new converter();
     if($csvPath === null or !file_exists($csvPath)){
       $csvPath = $_SERVER['DOCUMENT_ROOT'].config::get('base').'castle_trans.csv';
@@ -433,6 +433,10 @@ class controller{
 		$csvDataTransformed = array();
 		$csvKeys = array();
 
+
+		//Holds all the keys with an invalid format
+		$invalidFormat = array();
+
 		// Loop through all entries/rows and test for
 		// * duplicates
 		// * invalid keynames
@@ -445,6 +449,7 @@ class controller{
 
 			$newPath = array();
 			$newPath = explode('.', $row['key']);
+
 
 			if($currentPath === $newPath) {
 				foreach($checkCsvData as $ro) {
@@ -479,6 +484,7 @@ class controller{
 			//	who contain a space.
 			if(!preg_match("/^([a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]+)+$/", $row['key'])) {
 				$critInvalidFormat[] = 'CRITICAL ERROR: The key "' . $row['key'] . '" on row ' . $row['row'] . ' has an invalid format.';
+				$invalidFormat[] = $row['key'];
 			};
 			//	Get all keys from the csv without values
 			foreach($configLang as $i => $l) {
@@ -542,10 +548,14 @@ class controller{
 			$warning[] = 'WARNING: The following keys are stored in the DB but not provided in the CSV: ' . implode('<br>', $inDbNotInCsv);
 		}
 		//	Get all keys that are in the csv but not in the DB
-		//	TODO:	Save them if the flag that new values are allowed is set
-		$inCsvNotInDb = array_diff($csvKeys, $dbKeys);
-		if(count($inCsvNotInDb) > 0) {
-			$critInCsvNotInDb[] = 'CRITICAL ERROR: The following keys are provided in the CSV but not found in the DB: <br>' . implode('<br>', $inCsvNotInDb);
+		//	Only run this check if the user didn't explicitly wants to import new
+		//	values of the csv into the DB
+		if(!$importValuesInCsvNotInDb) {
+			$inCsvNotInDb = array_diff($csvKeys, $dbKeys);
+			$inCsvNotInDb = array_diff($inCsvNotInDb, $invalidFormat);
+			if(count($inCsvNotInDb) > 0) {
+				$critInCsvNotInDb[] = 'CRITICAL ERROR: The following keys are provided in the CSV but not found in the DB: <br>' . implode('<br>', $inCsvNotInDb);
+			}
 		}
 
 		//Combine all critical errors in one array.
@@ -634,7 +644,8 @@ class controller{
     $imported = false;
     $conflicts = array();
     if(isset($_FILES['csv']['name'])){
-      $conflicts = self::importCSV($_FILES['csv']['tmp_name']);
+			$importValuesInCsvNotInDb = isset($_POST['importValuesInCsvNotInDb'])? $_POST['importValuesInCsvNotInDb'] : false;
+      $conflicts = self::importCSV($_FILES['csv']['tmp_name'], $importValuesInCsvNotInDb);
       $imported = true;
     }
     self::render('import', array('imported' => $imported, 'conflicts' => $conflicts, 'active' => 0));
