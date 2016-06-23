@@ -449,7 +449,15 @@ class controller{
 	 * If the intersection is equal to the currentPath we know that the new path
 	 * is invalid, since a key-value-pair in a folder cannot be at the same time be a 'subfolder'
 	 *
-	 * @param	 Array	$row						Contains all the data of the current row.
+	 * IMPORTANT: The passed csvData has to be sorted, otherwise this function will fail.
+	 * This function checks the path of the current element with the path of the element
+	 * that came before it. If the 'common path' of the two is equal to the 'old path'
+	 * we know that the current element is a folder that should not exist since in the sorted
+	 * data all files with a name equal to a subfolder are right before those folders:
+	 * test.testfile
+	 * test.testfile.invalidsubfolder
+	 *
+	 * @param	 Array		$row				 Contains all the data of the current row.
 	 * @param  String 	$newPath     Contains the path to the current element.
 	 * @param  String 	$oldPath     Contains the path to the element looped over before
 	 *                               current one.
@@ -462,16 +470,18 @@ class controller{
 		if($oldPath === $newPath) return;
 
 		$commonPath = array();
+
 		for($i=0; $i < count($oldPath); $i++) {
-			if($oldPath[$i] === $newPath[$i]) $commonPath[] = $oldPath[$i];
+			if(isset($oldPath[$i]) && isset($newPath[$i]) && $oldPath[$i] === $newPath[$i]) $commonPath[] = $oldPath[$i];
 		}
+
 		if($commonPath && $commonPath == $oldPath) {
 			$oldKey = implode('.', $oldPath);
 			$oldRow;
 			foreach($csvData as $r) {
 				if($r['key'] === $oldKey) $oldRow = $r['row'];
 			}
-			$critFolder[] = 'CRITICAL ERROR: The folder "' . $row['key'] . '" on row ' . $row['row'] . ' is in a folder that is already present as key: ' . implode('.', $currentPath) . ' on row ' . $oldRow;
+			$critFolder[] = 'CRITICAL ERROR: The folder "' . $row['key'] . '" on row ' . $row['row'] . ' is in a folder that is already present as key: ' . implode('.', $oldPath) . ' on row ' . $oldRow;
 		}
 		return $newPath;
 	}
