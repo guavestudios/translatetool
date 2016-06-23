@@ -2,9 +2,13 @@
 
 namespace Guave\translatetool;
 
-require_once 'parsecsv.lib.php';
+require_once(dirname(__FILE__) . '/../AbstractBaseAdapter.class.php');
+require_once(dirname(__FILE__) . '/parsecsv.lib.php');
+require_once(dirname(__FILE__) . '/../../../config.class.php');
 
-class csv{
+use Guave\translatetool\AbstractBaseAdapter as AbstractBaseAdapter;
+
+class csv extends AbstractBaseAdapter{
 
 	public function save($content){
     $csvArrays = array();
@@ -41,20 +45,15 @@ class csv{
 		if(!file_exists($file)){
 			throw new \Exception("File {$file} not found");
 		}
+
 		$csv = new \parseCSV;
 		$csv->linefeed = "\n";
 		$csv->delimiter = ";";
 		$csv->parse($file);
+		$csvData = $csv;
+		$csvData = $csvData->data;
 
-		$newArray = array();
-		foreach($csv->data as $k => $row){
-      foreach(\config::get('languages') as $l){
-        if(isset($row[$l])){
-		      $newArray = array_replace_recursive($newArray, $this->insertDotDelimitedArray($row['key'], $row[$l]));
-        }
-      }
-		}
-		return $newArray;
+		return $csvData;
 	}
 
 	private function insertDotDelimitedArray($key, $value, $array = array()){

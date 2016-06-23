@@ -8,8 +8,10 @@ require '../config.class.php';
 require '../converter/convert.class.php';
 
 require_once '../converter/adapters/csv/parsecsv.lib.php';
+require_once(dirname(__FILE__) . '/php/validator.class.php');
 
 use Guave\translatetool\converter;
+use Guave\translatetool\Validator as Validator;
 
 date_default_timezone_set("Europe/Zurich");
 
@@ -338,284 +340,6 @@ class controller{
         }
     }
 
-	/**
-	 * Get all languages from the config as a sorted Array.
-	 *
-	 * @return Array   Contains all the languages of the config (sorted).
-	 */
-	protected static function getLangsFromConfig() {
-		//Get all languages from the config
-		$configLang = config::get('languages');
-		sort($configLang);
-		return $configLang;
-	}
-
-	/**
-	 * Gets all languages from the passed csvData.
-	 * The CSV has to be built the following way: the first column contains the keys
-	 * the rest of the columns the languages. So we can get all the keys of an entry
-	 * and delete the first one afterwards (since it contains the keys).
-	 *
-	 * @param  Array $csvData   Contains all the data of the csv
-	 * @return Array            Contains the languages present in the csv (sorted).
-	 */
-	protected static function getLangsFromCsv($csvData) {
-		$csvLang = array_keys($csvData);
-		array_shift($csvLang);
-		sort($csvLang);
-		return $csvLang;
-	}
-
-	/**
-	 * Checks the count of the languages defined in the config-file vs the languages
-	 * defined in the csv.
-	 * If the csv has less languages: warn but import
-	 * If the csv has more languages: warn and no import
-	 *
-	 * @param  Array  $configLang									Contains all languages found in the config.
-	 * @param  Array  $csvLang        						Contains all languages found in the CSV.
-	 * @param  Array  &$warnMoreLangInConfig      Reference to the array, that's passed warnings
-	 *                                            if some would occur during function execution.
-	 * @param  Array  &$critMoreLang  						Reference to the array that's passed critical
-	 *                                      			errors if some are encountered during function execution.
-	 */
-	protected static function checkConfigLangVsCsvLang($configLang, $csvLang, &$warnMoreLangInConfig, &$critMoreLang) {
-		if($configLang != $csvLang) {
-			if(count($configLang) > count($csvLang)) {
-				$warnMoreLangInConfig[] = 'WARNING: The config has defined ' . (count($configLang)-count($csvLang)) . ' more language(s) than the csv provides';
-			} else {
-				$additionalCsvLang = array_diff($csvLang, $configLang);
-				$critMoreLang[] = 'CRITICAL ERROR: The CSV contains more languages than the config has defined: ' . implode(', ', $additionalCsvLang);
-			}
-		}
-	}
-
-	/**
-	 * Adds to each entry of the passed csv-Data the row-number on which the data
-	 * occurs in the csv.
-	 * The index defines the row to start - since the csv-import in this project
-	 * "cuts off" the head-row, the first entry in the csvData-Array is already the
-	 * second line in the actual csv - that's why $index is usually 2.
-	 *
-	 * @param Array  $csvData  Reference to the array containing all data from the csv.
-	 * @param Number $index    Number of first row.
-	 */
-	protected static function addRowNumberToCsvData(&$csvData, $index=2) {
-		foreach($csvData as $key => $row) {
-			$csvData[$key]['row'] = $index;
-			$index++;
-		}
-	}
-
-	/**
-	 * Gets all keys of the csvData.
-	 *
-	 * @param  Array  $csvData  Contains all csvData to get the keys from.
-	 * @return Array          	Contains all keys from the csv.
-	 */
-	protected static function getAllKeys($csvData) {
-		$keys = array();
-		foreach($csvData as $key => $row) {
-			$keys[$key] = $row['key'];
-		}
-		return $keys;
-	}
-
-	/**
-	 * In case newPath === currentPath then this functions searches the passed csvData-Array
-	 * for duplicates and saves all relevant information into the passed 'error-array'.
-	 *
-	 * @param	 Array	$row						Contains all the data of the current row.
-	 * @param  String $newPath       	Contains the path to the current element.
-	 * @param  String $oldPath		   	Contains the path to the element that was looped.
-	 *                                over before the current one.
-	 * @param  Array  $csvData       	Contains all data to look for duplicates.
-	 * @param  Array  $critDuplicate 	Contains the error-messages (if any) when duplicates are present.
-	 */
-	protected static function checkForDuplicates($row, $newPath, $oldPath, $csvData, &$critDuplicate) {
-		if($oldPath !== $newPath) return;
-		$critDuplicate[$row['row']] = 'CRITICAL ERROR: The key "' . $row['key'] . '" on row ' . $row['row'] . ' is a duplicate.';
-		foreach($csvData as $ro) {
-			//Search duplicate
-			if(($ro['key'] === implode('.', $oldPath)) && $row['row'] !== $ro['row']) {
-				$critDuplicate[$ro['row']] = 'CRITICAL ERROR: The key "' . $row['key'] . '" on row ' . $ro['row'] . ' is a duplicate.';
-			}
-		}
-	}
-
-	/**
-	 * Test if key-parent-id-language already exists in DB when trying to create a new folder in same hierarchy
-	 * Get the intersection of the currentPath and the newPath
-	 * If the intersection is equal to the currentPath we know that the new path
-	 * is invalid, since a key-value-pair in a folder cannot be at the same time be a 'subfolder'
-	 *
-	 * IMPORTANT: The passed csvData has to be sorted, otherwise this function will fail.
-	 * This function checks the path of the current element with the path of the element
-	 * that came before it. If the 'common path' of the two is equal to the 'old path'
-	 * we know that the current element is a folder that should not exist since in the sorted
-	 * data all files with a name equal to a subfolder are right before those folders:
-	 * test.testfile
-	 * test.testfile.invalidsubfolder
-	 *
-	 * @param	 Array		$row				 Contains all the data of the current row.
-	 * @param  String 	$newPath     Contains the path to the current element.
-	 * @param  String 	$oldPath     Contains the path to the element looped over before
-	 *                               current one.
-	 * @param  Array	 	$csvData     Contains all data of the csv-file.
-	 * @param  Array 		$critFolder  Contains the error-messages (if any) when folder-names
-	 *                               are alreay present as entry-names.
-	 * @return String   	           The path to the current element.
-	 */
-	protected static function checkForFolderIsFile($row, $newPath, $oldPath, $csvData, &$critFolder) {
-		if($oldPath === $newPath) return;
-
-		$commonPath = array();
-
-		for($i=0; $i < count($oldPath); $i++) {
-			if(isset($oldPath[$i]) && isset($newPath[$i]) && $oldPath[$i] === $newPath[$i]) $commonPath[] = $oldPath[$i];
-		}
-
-		if($commonPath && $commonPath == $oldPath) {
-			$oldKey = implode('.', $oldPath);
-			$oldRow;
-			foreach($csvData as $r) {
-				if($r['key'] === $oldKey) $oldRow = $r['row'];
-			}
-			$critFolder[] = 'CRITICAL ERROR: The folder "' . $row['key'] . '" on row ' . $row['row'] . ' is in a folder that is already present as key: ' . implode('.', $oldPath) . ' on row ' . $oldRow;
-		}
-		return $newPath;
-	}
-
-	/**
-	 * Test that all keys from the csv are valid
-	 * Invalid are keys that contain no dot (this would be root-folders) or
-	 * who contain a space.
-	 *
-	 * @param  Array	$row              	Contains all data of the current row.
-	 * @param  Array	$critInvalidFormat	Contains the error-messages (if any) when key-names
-	 *                                  	have an invalid format.
-	 * @return String											The key of the row with the invalid format.
-	 */
-	protected static function checkInvalidFormat($row, &$critInvalidFormat) {
-		if(!preg_match("/^([a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]+)+$/", $row['key'])) {
-			$critInvalidFormat[] = 'CRITICAL ERROR: The key "' . $row['key'] . '" on row ' . $row['row'] . ' has an invalid format.';
-			return $row['key'];
-		};
-	}
-
-	/**
-	 * Checks if any values in the csvData are empty, that is if only the keys but no
-	 * values are provided.
-	 *
-	 * @param  Array	$configLang   Contains all languages that are defined in the config.
-	 * @param  Array	$row          Contains all data of the row to check on empty values.
-	 * @param  Array	$critEmptyVal Contains the error-messages (if any) when values
-	 *                              are empty.
-	 */
-	protected static function checkEmptyValuesInCsv($configLang, $row, &$critEmptyVal) {
-		foreach($configLang as $i => $l) {
-			if(array_key_exists($l, $row) && !$row[$l]) {
-				$critEmptyVal[] = 'CRITICAL ERROR: The key "' . $row['key'] . '" on row ' . $row['row'] . ' for the language "' . $l . '" is empty.';
-			}
-		}
-	}
-
-	/**
-	 * Gets all keys that are in the DB. The keys will be in the format folder.folder.key
-	 *
-	 * @param  Array	$dbDataIndexed	Contains all DB-Data in an indexed form. That means
-	 *                              	a db-Item with db-id 1 is on position 1 in the array,
-	 *                                one with the id 2 is on position 2 and so on.
-	 * @return Array                	Contains all keys that are present in the db.
-	 */
-	protected static function getKeysInDb($dbDataIndexed) {
-		$dbKeys = array();
-
-		//Loop through the indexed Array with DB-Data.
-		foreach($dbDataIndexed as $k => $v) {
-			//If the value of the element is null we are in a folder and have to do nothing.
-			if($v['value'] === null) continue;
-
-			//Store the key of the element in the path.
-			$path = $v['key'];
-
-			//If the parent_id is bigger than 0 we are in a single entry
-			if($v['parent_id'] > 0) {
-				//Get the 'parent-element' of the entry
-				$el = $dbDataIndexed[$v['parent_id']];
-				//While the element has a parent prepend the key of the parent-element
-				//to the path and save the parent-element as the new element
-				while($el['parent_id'] > 0) {
-					$path = $el['key'] . '.' . $path;
-					$el = $dbDataIndexed[$el['parent_id']];
-				}
-				//Prepend the key of the last element (that is the root folder)
-				$path = $el['key'] . '.' . $path;
-			}
-			if(!in_array($path, $dbKeys)) $dbKeys[] = $path;
-		}
-
-		return $dbKeys;
-	}
-
-	/**
-	 * Get all keys that are in the csv but not in the DB
-	 * Only run this function if the user didn't explicitly wants to import new
-	 * values of the csv into the DB
-	 *
-	 * @param  Boolean	$importValuesInCsvNotInDb		Indicates if the user wants to import
-	 *                                            	values only present in the csv or not.
-	 * @param  Array		$csvKeys                  	Contains all keys found in the csv.
-	 * @param  Array		$dbKeys                   	Contains all keys found in the db.
-	 * @param  Array		$invalidFormat            	Contains all keys with an invalid format.
-	 * @param  Array		$critInCsvNotInDb         	Reference to an array, to whom the error-message
-	 *                                           		is passed if some keys are found in the csv but not in the db.
-	 */
-	protected static function checkInCsvNotInDb($importValuesInCsvNotInDb, $csvKeys, $dbKeys, $invalidFormat, &$critInCsvNotInDb) {
-		if(!$importValuesInCsvNotInDb) {
-			$inCsvNotInDb = array_diff($csvKeys, $dbKeys);
-			$inCsvNotInDb = array_diff($inCsvNotInDb, $invalidFormat);
-			if(count($inCsvNotInDb) > 0) {
-				$critInCsvNotInDb[] = 'CRITICAL ERROR: The following keys are provided in the CSV but not found in the DB: <br>' . implode('<br>', $inCsvNotInDb);
-			}
-		}
-	}
-
-	/**
-	 * Prepares the dbData to have the same structure as the csv-data so we can later
-	 * easily compare the two datasets.
-	 * We create a new array whose index of the elements is the same as the id
-	 * of the db-entries.
-	 *
-	 * @param  Array	$dbData 	Contains all the data of the db.
-	 * @return Array         		Contains the data of the db in an indexed form, that is
-	 *                          a db-element with an id of 1 is on position 1 in the returned
-	 *                          array, one with id 2 is on position 2 and so on.
-	 */
-	protected static function getIndexedDbData($dbData) {
-		$dbDataIndexed = array();
-		foreach($dbData as $k => $v) {
-			$dbDataIndexed[$v['id']] = $v;
-		}
-		return $dbDataIndexed;
-	}
-
-	/**
-	 * Compares the two passed arrays, finds all values that are found only in the first
-	 * one and returns an array with containing the information about the values
-	 * that are found only in the first array.
-	 *
-	 * @param  Array	$dbKeys							Contains all Keys found in the DB.
-	 * @param  Array	$csvKeys						Contains all Keys found in the CSV.
-	 * @param	 Array 	$warnInDbNotInCsv		Contains warnings if any are present.
-	 */
-	protected static function checkInDbNotInCsv($dbKeys, $csvKeys, &$warnInDbNotInCsv) {
-		$inDbNotInCsv = array_diff($dbKeys, $csvKeys);
-		if(count($inDbNotInCsv) > 0) {
-			$warnInDbNotInCsv[] = 'WARNING: The following keys are stored in the DB but not provided in the CSV: <br>' . implode('<br>', $inDbNotInCsv);
-		}
-	}
-
 	public static function importCSV($csvPath = null, $importValuesInCsvNotInDb = true){
 		$converter = new converter();
     if($csvPath === null or !file_exists($csvPath)){
@@ -623,18 +347,14 @@ class controller{
     }
 
 		//Get all data from the csv-to-import
-    $csv = new \parseCSV;
-    $csv->linefeed = "\n";
-    $csv->delimiter = ";";
-    $csv->parse($csvPath);
-		$checkCsv = $csv;
-		$checkCsvData = $checkCsv->data;
+    $csv = $converter->load('csv', $csvPath);
+		$checkCsvData = $csv;
 
 		//Get all languages from the config
-		$configLang = self::getLangsFromConfig();
+		$configLang = Validator::getLangsFromConfig();
 
 		//Get all languages from the CSV
-		$csvLang = self::getLangsFromCsv($checkCsvData[0]);
+		$csvLang = Validator::getLangsFromData($checkCsvData[0]);
 
 		//Prepare arrays to hold all warnings and critical errors
 		$warnings = array();
@@ -651,17 +371,17 @@ class controller{
 
 		//Check if there are the same languages in the csv as in the config defined,
 		//else an error-message is stored to the appropriate array.
-		self::checkConfigLangVsCsvLang($configLang, $csvLang, $warnMoreLangInConfig, $critMoreLang);
+		Validator::checkConfigLangVsDataLang($configLang, $csvLang, $warnMoreLangInConfig, $critMoreLang);
 
 		//Get all key-value combos from the DB
 		$dbData = translations::get(array(), array('key'));
 
 		//Prepare data for sorting and save the row of the entries directly into their array
 		//so we can return a reference to the row in case of an error
-		self::addRowNumberToCsvData($checkCsvData);
+		Validator::addRowNumberToCsvData($checkCsvData);
 
 		//Get all keys from the csvData then sort the csvData with the help of those keys.
-		$entryKey = self::getAllKeys($checkCsvData);
+		$entryKey = Validator::getAllKeys($checkCsvData);
 		array_multisort($entryKey, SORT_ASC, $checkCsvData);
 
 		//Remember path to current key
@@ -685,23 +405,23 @@ class controller{
 			$newPath = array();
 			$newPath = explode('.', $row['key']);
 
-			self::checkForDuplicates($row, $newPath, $currentPath, $checkCsvData, $critDuplicate);
-			$currentPath = self::checkForFolderIsFile($row, $newPath, $currentPath, $checkCsvData, $critFolder);
+			Validator::checkForDuplicates($row, $newPath, $currentPath, $checkCsvData, $critDuplicate);
+			$currentPath = Validator::checkForFolderIsFile($row, $newPath, $currentPath, $checkCsvData, $critFolder);
 
-			$invalidFormat[] = self::checkInvalidFormat($row, $critInvalidFormat);
+			$invalidFormat[] = Validator::checkInvalidFormat($row, $critInvalidFormat);
 
-			self::checkEmptyValuesInCsv($configLang, $row, $critEmptyVal);
+			Validator::checkEmptyValuesInData($configLang, $row, $critEmptyVal);
 
 			$csvKeys[] = $row['key'];
 		}
 
-		$dbDataIndexed = self::getIndexedDbData($dbData);
-		$dbKeys = self::getKeysInDb($dbDataIndexed);
+		$dbDataIndexed = Validator::getIndexedDbData($dbData);
+		$dbKeys = Validator::getKeysInDb($dbDataIndexed);
 
 		//	Get all keys that are in the DB but are missing in the csv
-		self::checkInDbNotInCsv($dbKeys, $csvKeys, $warnInDbNotInCsv);
+		Validator::checkInDbNotInData($dbKeys, $csvKeys, $warnInDbNotInCsv);
 
-		self::checkInCsvNotInDb($importValuesInCsvNotInDb, $csvKeys, $dbKeys, $invalidFormat, $critInCsvNotInDb);
+		Validator::checkInDataNotInDb($importValuesInCsvNotInDb, $csvKeys, $dbKeys, $invalidFormat, $critInCsvNotInDb);
 
 		//Combine all critical errors in one array.
 		$critical['tooManyLangErrors'] = $critMoreLang;
@@ -725,7 +445,7 @@ class controller{
 			}
 		}
 
-    foreach($csv->data as $row){
+    foreach($csv as $row){
       foreach(config::get('languages') as $lang){
         if(isset($row[$lang])){
           self::insertDotDelimitedKeyValue($row['key'], $row[$lang], $lang, true);
