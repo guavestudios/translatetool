@@ -1,13 +1,13 @@
 <?php
 
-require 'php/flight/Flight.php';
-require 'php/auth.class.php';
-require 'php/translations.class.php';
-require 'php/curl.class.php';
-require '../config.class.php';
-require '../converter/convert.class.php';
+require_once(dirname(__FILE__) . '/php/flight/Flight.php');
+require_once(dirname(__FILE__) . '/php/auth.class.php');
+require_once(dirname(__FILE__) . '/php/translations.class.php');
+require_once(dirname(__FILE__) . '/php/curl.class.php');
+require_once(dirname(__FILE__) . '/../config.class.php');
+require_once(dirname(__FILE__) . '/../converter/convert.class.php');
 
-require_once '../converter/adapters/csv/parsecsv.lib.php';
+require_once(dirname(__FILE__) . '/../converter/adapters/csv/parsecsv.lib.php');
 require_once(dirname(__FILE__) . '/php/validator.class.php');
 
 use Guave\translatetool\converter;

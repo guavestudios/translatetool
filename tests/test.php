@@ -2,12 +2,14 @@
 
 namespace Guave\translatetool\tests;
 
-require_once(dirname(__FILE__) . '/../app/converter/convert.class.php');
 require_once(dirname(__FILE__) . '/../app/config.class.php');
+\config::setConfigPath('/config.test.json');
+
+
+require_once(dirname(__FILE__) . '/../app/converter/convert.class.php');
 require_once(dirname(__FILE__) . '/../app/gui/php/validator.class.php');
 require_once(dirname(__FILE__) . '/../app/gui/php/translations.class.php');
 require_once(dirname(__FILE__) . '/SimpleTester.php');
-
 
 use Guave\translatetool\converter as converter;
 use Guave\translatetool\validator as v;
@@ -20,6 +22,8 @@ $c = new converter();
 
 echo "Opening ".__DIR__.'\testdata\01_1key OK.csv';
 $data = $c->load('csv', __DIR__.'/testdata/01_1key OK.csv');
+
+fillDb($data);
 
 st::isArray('data', $data);
 st::isArray('data-entry', $data[0]);
@@ -92,7 +96,8 @@ st::isNotEmpty('folderIsFileErrors', $err['folderIsFileErrors']);
 st::isEqual('folderIsFileErrors', $err['folderIsFileErrors'][0], 'CRITICAL ERROR: The folder "test.eintrag03.invalidEintrag" on row 5 is in a folder that is already present as key: test.eintrag03 on row 4');
 st::isEmpty('invalidFormatErrors', $err['invalidFormatErrors']);
 st::isEmpty('emptyValueErrors', $err['emptyValueErrors']);
-st::isEmpty('inCsvNotInDbErrors', $err['inCsvNotInDbErrors']);
+st::isNotEmpty('inCsvNotInDbErrors', $err['inCsvNotInDbErrors']);
+st::isEqual('inCsvNotInDbErrors', $err['inCsvNotInDbErrors'][0], 'CRITICAL ERROR: The following keys are provided in the CSV but not found in the DB: <br>test.eintrag03.invalidEintrag');
 
 $err = array(); $warn = array();
 echo "\n\nSpecialchars - OK";
@@ -195,6 +200,62 @@ st::isEmpty('inCsvNotInDbErrors', $err['inCsvNotInDbErrors']);
 
 st::printStats();
 
+
+cleanUpDb();
+
+/**
+ * Helper-functions
+ */
+function cleanUpDb() {
+	//We need to grab all the data, count it and delete each row separately.
+	//A quick 'unlink' of the dbfile does not work because we have no write-permission
+	//on the db-folder and apparently cannot set it...
+	$data = \translations::get();
+	for($i=0;$i<count($data);$i++) {
+		\translations::deleteRow($i+1);
+	}
+}
+
+
+function fillDb($csvData) {
+	foreach($csvData as $row){
+		foreach(\config::get('languages') as $lang){
+			if(isset($row[$lang])){
+				putDataInDb($row['key'], $row[$lang], $lang, true);
+			}
+		}
+	}
+}
+
+function putDataInDb($key, $value, $lang = null, $replace = false) {
+	if(!$lang){
+			$languages = \config::get('languages');
+			$lang = $languages[0];
+	}
+	$keys = explode(".", $key);
+	$endKey = end($keys);
+	$parentId = \translations::getParentIdForDotDelimitedKey($key, $lang);
+	$result = \translations::get(array(), array(), "key = '{$endKey}' AND language = '{$lang}' AND parent_id = {$parentId}");
+	if(empty($result)){
+			\translations::append(array(
+					array(
+							'key' => $endKey,
+							'parent_id' => $parentId,
+							'language' => $lang,
+							'value' => $value
+					)
+			));
+	}else if($replace){
+			\translations::update($result[0]['id'],
+					array(
+							'key' => $endKey,
+							'parent_id' => $parentId,
+							'language' => $lang,
+							'value' => $value
+					)
+			);
+	}
+}
 
 
 function runChecks($csvFile, $configLang, &$warnings, &$errors, $c) {

@@ -11,7 +11,12 @@ class config{
 		}
 		return isset(self::$cfg[$key]) ? self::$cfg[$key] : null;
 	}
-	
+
+	public static function setConfigPath($path) {
+		self::$cfgPath = $path;
+		$cfg = null;
+	}
+
 	private static function readConfig(){
 		if(file_exists(__DIR__.self::$cfgPath)){
 			return json_decode(file_get_contents(__DIR__.self::$cfgPath), true);

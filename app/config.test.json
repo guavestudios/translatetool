@@ -1,0 +1,38 @@
+{
+	"dbpath": "../../db/dblogtest.sqlite",
+	"dbpathUnlink": "../app/db/dblogtest.sqlite",
+	"base": "/",
+	"languages": ["it", "en"],
+	"users":[
+		{
+			"username": "admin",
+			"passwd": "admin",
+			"roles": [
+				"admin"
+			]
+		}
+	],
+	"masters": [
+
+	],
+	"exports": [
+		{
+			"adapter": "yaml",
+			"path": "{doc_root}/translation.yml"
+		}
+	],
+    "exports_combined": [
+        {
+            "adapter": "csv",
+            "path": "{doc_root}/translation.csv"
+        }
+    ],
+    "export_key_adapter": "yaml",
+    "export_download": "exports_combined:0",
+	"fields":[
+		"key TEXT",
+		"value TEXT",
+		"parent_id INT",
+		"language TEXT"
+	]
+}
