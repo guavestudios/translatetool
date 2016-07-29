@@ -43,6 +43,7 @@
 							<?php
 								$bounceback = substr($_SERVER['REQUEST_URI'], strlen(config::get('base')));
 							?>
+														<a href="nottranslated">Nicht übersetzt</a> |
                             <?php if(config::get('export_download')): ?>
                                 <a href="download">Download</a> |
                             <?php endif ?>

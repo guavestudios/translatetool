@@ -50,6 +50,7 @@ Flight::route('/importCSV', array('controller', 'importCSV'));Flight::route('/up
 Flight::route('/search', array('controller', 'search'));
 Flight::route('/convert', array('controller', 'convertKey'));
 Flight::route('/import', array('controller', 'import'));
+Flight::route('/nottranslated', array('controller', 'nottranslated'));
 
 Flight::route('/widget/update', array('widgetController', 'update'));
 
@@ -537,6 +538,69 @@ class controller{
     }
 		self::render('import', array('imported' => $imported, 'countErrors' => $countErrors, 'countWarnings' => $countWarnings, 'errors' => $conflicts['criticalErrors'], 'warnings' => $conflicts['warnings'], 'active' => 0));
   }
+
+	private static function fillKeytree(&$dbArr, &$output) {
+
+		foreach ($dbArr as &$entry) {
+			if (empty($output[$entry["id"]])) {
+				$key = $entry["key"];
+				$pid = $entry["parent_id"];
+				while ($pid != 0) {
+					foreach ($dbArr as &$search) {
+						if ($search["id"] == $pid) {
+							$key = $search["key"].'.'.$key;
+							$pid = $search["parent_id"];
+						}
+					}
+				}
+				$output[$entry["id"]] = $key;
+			}
+		}
+
+	}
+	public static function nottranslated() {
+		$langs = config::get('languages');
+		$dbData = translations::get(array(), array('key'));
+
+		$keymap = array();
+		self::fillKeytree($dbData, $keymap);
+
+		$data = array();
+		foreach($dbData as $entry) {
+			//skip the root (language)
+			if ($entry["parent_id"] == 0)
+				continue;
+
+			$key = $keymap[$entry["parent_id"]].'.'.$entry["key"];
+
+			$data[$key][$entry['language']] = $entry;
+		}
+
+		$missing = array();
+		foreach($data as $k => $entrylang) {
+			if (count($entrylang)<count($langs)) {
+				$entry = reset($entrylang);
+
+				$miss = array(
+					'key' => $k,
+					'folder_id' => $entry['parent_id'],
+					'folder_name' => $keymap[$entry['parent_id']],
+					'languages' => array()
+				);
+
+				foreach($langs as $lang) {
+					if (empty($entrylang[$lang])) {
+						$miss['languages'][]=$lang;
+					}
+				}
+				$missing[] = $miss;
+			}
+		}
+
+		self::render('nottranslated', array(
+			'keys' => $missing
+		));
+	}
 
 	private static function render($template, $vars = array()){
 		Flight::render($template, $vars, 'body_content');
