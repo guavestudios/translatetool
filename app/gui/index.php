@@ -539,6 +539,67 @@ class controller{
 		self::render('import', array('imported' => $imported, 'countErrors' => $countErrors, 'countWarnings' => $countWarnings, 'errors' => $conflicts['criticalErrors'], 'warnings' => $conflicts['warnings'], 'active' => 0));
   }
 
+	/**
+	 * route
+	 */
+	public static function nottranslated() {
+		$langs = config::get('languages');
+		$dbData = translations::get(array(), array('key'));
+
+		//prepare a map for every entry_id to its keypath
+		$keymap = array();
+		self::fillKeytree($dbData, $keymap);
+
+		//loop through data and unify language to keypath
+		$data = array();
+		foreach($dbData as $entry) {
+			//skip the root (language)
+			if ($entry["parent_id"] == 0)
+				continue;
+
+			$key = $keymap[$entry["parent_id"]].'.'.$entry["key"];
+			$data[$key][$entry['language']] = $entry;
+		}
+
+		//now we loop through all keypaths and check against the language count
+		$missing = array();
+		foreach($data as $k => $entrylang) {
+			if (count($entrylang)<count($langs)) {
+				//there is one or more translations missing so we add them to the missings
+				$entry = reset($entrylang);
+				$miss = array(
+					'key' => $k,
+					'folder_id' => $entry['parent_id'],
+					'folder_name' => $keymap[$entry['parent_id']],
+					'languages' => array()
+				);
+
+				//add every missing language to the entry
+				foreach($langs as $lang) {
+					if (empty($entrylang[$lang])) {
+						$miss['languages'][]=$lang;
+					}
+				}
+
+				//finally add this to the missing array
+				$missing[] = $miss;
+			}
+		}
+
+		self::render('nottranslated', array(
+			'keys' => $missing
+		));
+	}
+
+	/**
+	 * Maps the id of an element to its keypath
+	 *
+	 * fills $output with a
+	 * assoc array $array[entry_id] = keypath
+	 *
+	 * @param  array $dbArr  database input array
+	 * @param  array $output reference to output
+	 */
 	private static function fillKeytree(&$dbArr, &$output) {
 
 		foreach ($dbArr as &$entry) {
@@ -556,50 +617,6 @@ class controller{
 				$output[$entry["id"]] = $key;
 			}
 		}
-
-	}
-	public static function nottranslated() {
-		$langs = config::get('languages');
-		$dbData = translations::get(array(), array('key'));
-
-		$keymap = array();
-		self::fillKeytree($dbData, $keymap);
-
-		$data = array();
-		foreach($dbData as $entry) {
-			//skip the root (language)
-			if ($entry["parent_id"] == 0)
-				continue;
-
-			$key = $keymap[$entry["parent_id"]].'.'.$entry["key"];
-
-			$data[$key][$entry['language']] = $entry;
-		}
-
-		$missing = array();
-		foreach($data as $k => $entrylang) {
-			if (count($entrylang)<count($langs)) {
-				$entry = reset($entrylang);
-
-				$miss = array(
-					'key' => $k,
-					'folder_id' => $entry['parent_id'],
-					'folder_name' => $keymap[$entry['parent_id']],
-					'languages' => array()
-				);
-
-				foreach($langs as $lang) {
-					if (empty($entrylang[$lang])) {
-						$miss['languages'][]=$lang;
-					}
-				}
-				$missing[] = $miss;
-			}
-		}
-
-		self::render('nottranslated', array(
-			'keys' => $missing
-		));
 	}
 
 	private static function render($template, $vars = array()){
