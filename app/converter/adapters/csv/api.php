@@ -20,7 +20,7 @@ class csv extends AbstractBaseAdapter{
       $csvArray = array_merge_recursive($csvArray, $this->array_filter_recursive($a));
     }
     $csv = array();
-    $csv[] = implode(";", array_merge(array('key'), \config::get('languages')));
+    $csv[] = '"'.implode('";"', array_merge(array('key'), \config::get('languages'))).'"';
     foreach($csvArray as $key => $row){
       $rows = '';
       foreach(\config::get('languages') as $l){
@@ -28,9 +28,9 @@ class csv extends AbstractBaseAdapter{
         if(isset($row[$l])){
           $r = $row[$l];
         }
-        $rows .= ';'.$r;
+        $rows .= '";"'.$r;
       }
-      $csv[] = $key.$rows;
+      $csv[] = '"'.$key.$rows.'"';
     }
 		return array(
 			'file' => implode("\n", $csv),
