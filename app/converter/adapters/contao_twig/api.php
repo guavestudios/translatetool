@@ -20,7 +20,7 @@ class contao_twig {
 
 	public function outputKey($key){
 		$this->insertDotDelimitedArray($key, null);
-		return '{{ lang.'.$key.' }}';
+		return '{{ _lang.'.$key.' }}';
 	}
 
 	private function insertDotDelimitedArray($key, $value, $array = array()){
