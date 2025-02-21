@@ -2,8 +2,8 @@
 <html>
 	<head>
 		<title>Translate Tool</title>
-		<base href="http://<?= $_SERVER['HTTP_HOST'].config::get('base') ?>">
-		<link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
+		<base href="//<?= $_SERVER['HTTP_HOST'].config::get('base') ?>">
+		<link href='//fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
 		<link href="gui/css/styles.css" rel="stylesheet" type="text/css">
 		<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 	</head>
