@@ -557,6 +557,10 @@ class controller{
 			if ($entry["parent_id"] == 0)
 				continue;
 
+			// skip (sub) bundles, since they're not translatable
+			if ($entry["value"] == NULL && $entry["language"] == NULL) 
+				continue;
+
 			$key = $keymap[$entry["parent_id"]].'.'.$entry["key"];
 			$data[$key][$entry['language']] = $entry;
 		}
