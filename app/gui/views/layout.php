@@ -61,7 +61,7 @@
 						<ul>
 							<li>
 								<a href="overview">Home</a>
-								<?php echo translations::getTreeHtml($active); ?>
+								<?php echo translations::getTreeHtml(@$active); ?>
 							</li>
 						</ul>
 					</div>
