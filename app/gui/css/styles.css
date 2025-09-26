@@ -1,159 +1,296 @@
-body{
-	background: url('../images/bg.png');
-	font-family: 'PT Sans', sans-serif
+:root {
+	/* // FONT SIZES */
+	--font-sm: 0.85rem;
+	--font-md: 1rem;
+	--font-lg: 1.25rem;
+	--font-xl: 1.5rem;
+	--font-2xl: 2rem;
+	--font-3xl: 3rem;
+
+	/* COLOR VARIABLES */
+	--c-text: rgb(220, 220, 220);
+	--c-text-light: rgb(150, 150, 160);
+	--c-text-inverse: rgb(44, 44, 44);
+	--c-primary: #a4c92c;
+
+	--c-base: rgb(44, 44, 44);
+	/* No direct CSS variable for hsl(from ...) math, so use static values or preprocess */
+	--c-base-dark: #232323;
+	--c-base-light: #4A4A4A;
+	--c-border: rgb(110, 110, 115);
+
+	--c-error: rgb(160, 0, 0);
+
+	--spacing-xs: 0.25rem;
+	--spacing-sm: 0.5rem;
+	--spacing-md: 1rem;
+	--spacing-lg: 1.5rem;
+	--spacing-xl: 2rem;
+	--spacing-2xl: 3rem;
+	--spacing-3xl: 4rem;
+
+	--border-radius: 0.25rem;
+	--border-radius-lg: 0.5rem;
+	--border-radius-xl: 1rem;
 }
-.guave{
-	background-color: #A4C92C;
+
+@import 'https://fast.fonts.net/t/1.css?apiType=css&projectid=21e2d220-4a47-47b9-84df-3289bbc622b0';
+
+@font-face {
+	font-family: 'Avenir Next Guave';
+	font-weight: 400;
+	src: url('../fonts/c4691e94-080d-4452-8f9f-8b3db6b68d55.woff2') format('woff2');
 }
-.clearfix:after {
-	visibility: hidden;
-	display: block;
-	font-size: 0;
-	content: " ";
-	clear: both;
-	height: 0;
+
+@font-face {
+	font-family: 'Avenir Next Guave';
+	font-weight: 500;
+	src: url('../fonts/6afe4676-059a-4aa8-b891-29856bbcba22.woff2') format('woff2');
 }
-h1{
-	font-weight: 700;
+
+body {
+	font-family: 'Avenir Next Guave', 'Arial', 'PT Sans', sans-serif;
+	margin: 0;
 	padding: 0;
-	margin: 0 0 20px 0;
+	background: var(--c-base);
+	color: var(--c-text);
 }
-a{
+
+h1 {
+	padding: 0;
+	margin: 0;
+}
+
+@view-transition {
+	navigation: auto
+}
+
+button {
+	background: var(--c-primary);
+}
+
+a {
 	text-decoration: none;
-	color: #A4C92C;
+	color: currentColor;
 }
-a:hover{
+
+a:hover {
 	text-decoration: underline;
 }
-img{
-	border: 0;
-}
-#wrapper{
+
+#wrapper {
 	width: 996px;
 	margin: 0 auto;
+	height: 100vh;
+	/* display: grid; */
+	grid-template-rows: auto 1fr;
 }
-.box{
-	-moz-box-shadow:0px 0px 10px 2px rgba(118, 118, 118, 0.5);
-	-webkit-box-shadow:0px 0px 10px 2px rgba(118, 118, 118, 0.5);
-	box-shadow:0px 0px 10px 2px rgba(118, 118, 118, 0.5);
 
-	-webkit-border-radius: 6px;
-	-moz-border-radius: 6px;
-	border-radius: 6px;
-
-	background-color: white;
-	margin-bottom: 20px;
+#wrapper.centered {
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
-.box.small{
-	width: 200px;
+.page-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.page-header h1 {
+	font-size: var(--font-2xl);
+	font-weight: bold;
+	margin: 0;
+	padding: var(--spacing-md) 0;
+}
+
+.page-header__actions {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-lg);
+}
+
+.main-container {
+	display: grid;
+	grid-template-columns: 250px 1fr;
+}
+
+.main-container aside {
+	padding: var(--spacing-md);
+	background: var(--c-base-dark);
+	border-radius: var(--border-radius);
+	min-height: 80vh;
+}
+
+.list-container {
+	padding: var(--spacing-md);
+}
+
+.login-popup {
+	width: 320px;
 	margin: 0 auto;
-}
-.box .title{
-	background-color: #A4C92C;
-	padding: 10px;
-}
-.box .title .text{
-	float: left;
-	font-size: 20px;
-	color: white;
-}
-.box .title .buttons{
-	float: right;
-	color: white;
-}
-.box .title .buttons a{
-	color: white;
-}
-.box .text{
-	padding: 10px;
-	font-size: 14px;
+	background: var(--c-base-light);
+	border-radius: var(--border-radius);
+	padding: var(--spacing-md);
 }
 
-.box .tree{
-	width: 200px;
-	padding: 10px;
-	float: left;
+.login-popup form {
+	margin-top: var(--spacing-lg);
+	display: grid;
+	grid-auto-rows: auto;
+	gap: var(--spacing-md);
 }
-.box .treeInner{
-	border: 1px #eee solid;
-	padding: 10px 0;
+
+.treeInner {
 	overflow: auto;
 }
-.box .treeInner ul{
-	list-style-type:none;
-	margin: 0 0 0 20px;
-	padding: 0;
-}
-.box .treeInner li{
-	font-size: 14px;
-	font-weight: 400;
-}
-.box .treeInner li .hovermenu{
-	display: none;
-}
-.box .treeInner li .hovermenu img{
-	vertical-align: -1px;
-}
-.box .treeInner .row{
-	display: block;
-}
-.box .treeInner .row:hover > .hovermenu{
+
+.treeInner a {
 	display: inline-block;
-	margin-left: 5px;
+	margin-bottom: var(--spacing-xs);
 }
-.box .treeInner li.active{
-	font-weight: 700;
+
+.treeInner ul {
+	list-style-type: none;
+	padding: 0;
+	margin-left: var(--spacing-lg);
 }
-.box .treeText{
-	width: 756px;
-	padding: 10px;
-	float: left;
-	font-size: 14px;
+
+.tree-folder a {
+	position: relative;
 }
-input{
+
+.tree-folder-actions {
+	display: inline-flex;
+	gap: var(--spacing-xs);
+	margin-left: var(--spacing-md);
+	opacity: 0;
+	pointer-events: none;
+	translate: -6px;
+	transition: opacity 0.2s ease, translate 0.2s ease;
+}
+
+.tree-folder-actions a:hover {
+	background: var(--c-primary);
+	color: var(--c-text-inverse);
+}
+
+.tree-folder-actions a {
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	transition: background 0.2s;
+}
+
+.tree-folder-actions svg {
+	width: 18px;
+	height: 18px;
+}
+
+.tree-folder .row:hover a+.tree-folder-actions {
+	opacity: 1;
+	translate: 0;
+	pointer-events: auto;
+}
+
+.tree-folder a.active:before {
+	content: '';
+	position: absolute;
+	left: -1.4em;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 1em;
+	height: 1em;
+	border-radius: 50%;
+	background: var(--c-primary);
+	view-transition-name: list-dot;
+}
+
+input {
 	font-size: 14px;
 	padding: 5px;
 	border: 1px #ccc solid;
+	font: inherit;
+	color: currentColor;
+	background: var(--c-base-light);
+	border-color: transparent;
+	border-radius: var(--border-radius);
 }
-input:hover{
+
+input:hover {
 	border: 1px #999 solid;
 }
+
+input[type=submit] {
+	background: var(--c-primary);
+	border: none;
+	color: var(--c-text-inverse);
+	padding: 10px 15px;
+	border-radius: var(--border-radius);
+	cursor: pointer;
+	font-size: var(--font-sm);
+	transition: background-color 0.3s ease;
+}
+
 input[type=submit]:active,
-input[type=button]:active{
+input[type=button]:active {
 	background-color: #E0E0E0;
 }
-input.value{
+
+input.value {
 	width: 400px;
 }
 
-.keyContainer{
-	padding: 10px;
+.lang-row__name {
+	width: 3ch;
+	display: inline-block;
+	text-align: right;
+	margin-right: var(--spacing-xs);
 }
 
-.inputvalues a{
-    display: inline-block;
-    width: 30px;
-    color: black;
-}
-.inputvalues a:hover{
-    text-decoration: none;
+.keyContainer {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--spacing-md);
+	margin-bottom: var(--spacing-lg);
 }
 
-.keytable, #searchTable{
+.values-container {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+}
+
+.inputvalues a {
+	display: inline-block;
+	width: 30px;
+	color: black;
+}
+
+.inputvalues a:hover {
+	text-decoration: none;
+}
+
+.keytable,
+#searchTable {
 	width: 100%;
 }
 
-.keytable tr:first-child td, #searchTable tr:first-child td{
+.keytable tr:first-child td,
+#searchTable tr:first-child td {
 	font-weight: bold;
 }
 
-.keytable td, #searchTable td{
+.keytable td,
+#searchTable td {
 	padding: 5px;
 	border-bottom: #eee solid 1px;
 	vertical-align: top;
 }
 
-#searchField{
-    float: right;
-    margin: 2px 0;
+#searchField {
+	margin: 2px 0;
 }
