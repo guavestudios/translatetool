@@ -14,7 +14,7 @@
 		$(function() {
 			$('.keyform').on('keypress', 'input', function(e) {
 				if (e.which == 13) {
-					$('.inputvalues').append('<div class="keyContainer"><a><?= reset($l); ?></a><input type="text" name="key[]" value="" placeholder="Key" class="key"> ' +
+					$('.inputvalues').append('<div class="trans-item"><a><?= reset($l); ?></a><input type="text" name="key[]" value="" placeholder="Key" class="key"> ' +
 						'<input type="text" name="value[]" value="" placeholder="Wert" class="value">' +
 						'<input type="hidden" name="id[]" value="">' +
 						'<input type="hidden" name="language[]" value="<?= reset($l); ?>"></div>'

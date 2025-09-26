@@ -82,7 +82,7 @@ a:hover {
 	width: 996px;
 	margin: 0 auto;
 	height: 100vh;
-	/* display: grid; */
+	display: grid;
 	grid-template-rows: auto 1fr;
 }
 
@@ -91,6 +91,7 @@ a:hover {
 	justify-content: center;
 	align-items: center;
 }
+
 .page-header {
 	display: flex;
 	align-items: center;
@@ -119,7 +120,7 @@ a:hover {
 	padding: var(--spacing-md);
 	background: var(--c-base-dark);
 	border-radius: var(--border-radius);
-	min-height: 80vh;
+	margin-bottom: var(--spacing-lg);
 }
 
 .list-container {
@@ -244,6 +245,31 @@ input.value {
 	width: 400px;
 }
 
+.trans-item .delete-key {
+	opacity: 0;
+	pointer-events: none;
+	translate: -6px;
+	transition: opacity 0.2s ease, translate 0.2s ease;
+	color: var(--c-error);
+}
+
+.trans-item:hover .delete-key {
+	opacity: 1;
+	pointer-events: all;
+	translate: 0;
+}
+
+.key-wrapper {
+	display: flex;
+	align-items: center;
+}
+
+.key-wrapper svg {
+	width: 20px;
+	height: 20px;
+	margin-left: var(--spacing-sm);
+}
+
 .lang-row__name {
 	width: 3ch;
 	display: inline-block;
@@ -251,7 +277,7 @@ input.value {
 	margin-right: var(--spacing-xs);
 }
 
-.keyContainer {
+.trans-item {
 	display: flex;
 	align-items: flex-start;
 	gap: var(--spacing-md);

@@ -54,7 +54,14 @@ class translations
 		if (!is_numeric($id)) {
 			throw new Exception("ID is not numeric (given: '{$id}')");
 		}
-		self::qry("DELETE FROM " . self::$translationTable . " WHERE id = {$id}");
+		// Get the key for the given id
+		$row = self::getOne($id);
+		if (!$row || !isset($row['key'])) {
+			throw new Exception("No row found with id '{$id}'");
+		}
+		$key = $row['key'];
+		// Delete all rows with the same key
+		self::qry("DELETE FROM " . self::$translationTable . " WHERE key = '" . self::getSql()->escapeString($key) . "'");
 	}
 
 	public static function insertId()
