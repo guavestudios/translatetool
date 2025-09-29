@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	// Multi-delete mode logic
 	const multiDeleteBtn = document.getElementById('multiDeleteModeBtn');
+	const multiDeleteBtnText = multiDeleteBtn.innerText
 	const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
 	let multiDeleteMode = false;
 
@@ -58,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
 				cb.checked = false;
 			});
 			deleteSelectedBtn.style.display = multiDeleteMode ? '' : 'none';
-			multiDeleteBtn.textContent = multiDeleteMode ? 'Auswahlmodus beenden' : 'Multi selection';
+			multiDeleteBtn.textContent = multiDeleteMode ? 'Exit selection mode' : multiDeleteBtnText;
 		});
 
 		deleteSelectedBtn.addEventListener('click', function () {

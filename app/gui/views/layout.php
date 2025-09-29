@@ -14,11 +14,11 @@
 		<header class="page-header">
 			<h1>Languave</h1>
 			<div class="page-header__actions">
-				<a href="nottranslated">zu übersetzen</a>
+				<a href="nottranslated">pending translations</a>
 				<?php if (config::get('export_download')): ?>
-					<a href="download">Export</a>
+					<a href="download">export</a>
 				<?php endif ?>
-				<a href="import">Import</a>
+				<a href="import">import</a>
 				<!-- 
 					<span>
 						 <?php

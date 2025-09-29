@@ -56,17 +56,14 @@ body {
 	color: var(--c-text);
 }
 
-h1 {
+h1,
+h2 {
 	padding: 0;
 	margin: 0;
 }
 
 @view-transition {
 	navigation: auto
-}
-
-button {
-	background: var(--c-primary);
 }
 
 a {
@@ -78,21 +75,75 @@ a:hover {
 	text-decoration: underline;
 }
 
+input,
+button {
+	padding: 5px;
+	border: 1px #ccc solid;
+	font: inherit;
+	color: currentColor;
+	background: var(--c-base-light);
+	border-color: transparent;
+	border-radius: var(--border-radius);
+	display: inline-flex;
+	align-items: center;
+}
+
+button {
+	font-size: var(--font-sm);
+}
+
+input svg,
+button svg {
+	width: 1em;
+	height: 1em;
+}
+
+input:hover {
+	border: 1px #999 solid;
+}
+
+input[type=submit] {
+	background: var(--c-primary);
+	border: none;
+	color: var(--c-text-inverse);
+	padding: 10px 15px;
+	border-radius: var(--border-radius);
+	cursor: pointer;
+	font-size: var(--font-sm);
+	transition: background-color 0.3s ease;
+}
+
+input[type=submit]:active,
+input[type=button]:active {
+	background-color: #E0E0E0;
+}
+
+input.value {
+	width: 100%;
+}
+
 .multi-delete-mode .multi-delete-checkbox {
 	opacity: 1;
 	width: 16px;
 	margin-right: var(--spacing-sm);
+	border: 2px solid var(--c-primary);
+	flex: 0 0 16px;
+	border-radius: 999px;
+	background: var(--c-base-light);
 }
 
 .multi-delete-checkbox {
-	opacity: 0;
-	position: relative;
-	top: 4px;
-	width: 0;
 	height: 16px;
+	appearance: none;
 	cursor: pointer;
 	transition: all 0.2s ease;
 	margin: 0;
+	padding: 0;
+	border: 0;
+ }
+
+.multi-delete-checkbox:checked {
+	background: var(--c-primary);
 }
 
 #wrapper {
@@ -142,6 +193,27 @@ a:hover {
 
 .list-container {
 	padding: var(--spacing-md);
+}
+
+.inputvalues {
+	display: grid;
+	grid-template-columns: 300px 1fr;
+}
+
+.add-key-section {
+	margin-bottom: 2rem;
+	position: sticky;
+	top: 0;
+	grid-column: 1/-1;
+	background: var(--c-base);
+	z-index: 100;
+	display: grid;
+	grid-template-columns: subgrid;
+}
+
+.action-container {
+	display: flex;
+	gap: var(--spacing-sm);
 }
 
 .login-popup {
@@ -227,43 +299,19 @@ a:hover {
 	view-transition-name: list-dot;
 }
 
-input {
-	font-size: 14px;
-	padding: 5px;
-	border: 1px #ccc solid;
-	font: inherit;
-	color: currentColor;
-	background: var(--c-base-light);
-	border-color: transparent;
-	border-radius: var(--border-radius);
-}
-
-input:hover {
-	border: 1px #999 solid;
-}
-
-input[type=submit] {
-	background: var(--c-primary);
-	border: none;
-	color: var(--c-text-inverse);
-	padding: 10px 15px;
-	border-radius: var(--border-radius);
-	cursor: pointer;
-	font-size: var(--font-sm);
-	transition: background-color 0.3s ease;
-}
-
-input[type=submit]:active,
-input[type=button]:active {
-	background-color: #E0E0E0;
-}
-
-input.value {
-	width: 400px;
+.tree-folder .row {
+	display: flex;
+	align-items: center;
 }
 
 .trans-item {
 	position: relative;
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: subgrid;
+	align-items: flex-start;
+	gap: var(--spacing-md);
+	margin-bottom: var(--spacing-lg);
 }
 
 .trans-item::before {
@@ -281,9 +329,12 @@ input.value {
 }
 
 @keyframes border-fade {
-	10%, 90% {
+
+	10%,
+	90% {
 		border-color: var(--c-primary);
 	}
+
 	100% {
 		border-color: transparent;
 	}
@@ -303,11 +354,24 @@ input.value {
 	translate: 0;
 }
 
+.key-wrapper {
+	display: flex;
+	align-items: center;
+}
+
+.key-wrapper input[type=text] {
+	width: 100%;
+}
 
 .key-wrapper svg {
 	width: 20px;
 	height: 20px;
 	margin-left: var(--spacing-sm);
+}
+
+.lang-row {
+	display: flex;
+	align-items: baseline;
 }
 
 .lang-row__name {
@@ -317,27 +381,10 @@ input.value {
 	margin-right: var(--spacing-xs);
 }
 
-.trans-item {
-	display: flex;
-	align-items: flex-start;
-	gap: var(--spacing-md);
-	margin-bottom: var(--spacing-lg);
-}
-
 .values-container {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-sm);
-}
-
-.inputvalues a {
-	display: inline-block;
-	width: 30px;
-	color: black;
-}
-
-.inputvalues a:hover {
-	text-decoration: none;
 }
 
 .keytable,
