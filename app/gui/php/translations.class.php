@@ -4,9 +4,7 @@ class translations
 {
 
 	private static $sql = null;
-	private static $config = null;
 	private static $sql_mode = SQLITE3_ASSOC;
-	private static $fieldTypes = array();
 	private static $translationTable = 'translations';
 	private static $logTable = 'log';
 
@@ -62,6 +60,16 @@ class translations
 		$key = $row['key'];
 		// Delete all rows with the same key
 		self::qry("DELETE FROM " . self::$translationTable . " WHERE key = '" . self::getSql()->escapeString($key) . "'");
+	}
+
+	public static function deleteRows(array $ids)
+	{
+		if (empty($ids)) {
+			return;
+		}
+		foreach ($ids as $id) {
+			self::deleteRow($id);
+		}
 	}
 
 	public static function insertId()
