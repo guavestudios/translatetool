@@ -78,6 +78,23 @@ a:hover {
 	text-decoration: underline;
 }
 
+.multi-delete-mode .multi-delete-checkbox {
+	opacity: 1;
+	width: 16px;
+	margin-right: var(--spacing-sm);
+}
+
+.multi-delete-checkbox {
+	opacity: 0;
+	position: relative;
+	top: 4px;
+	width: 0;
+	height: 16px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	margin: 0;
+}
+
 #wrapper {
 	width: 996px;
 	margin: 0 auto;
@@ -245,6 +262,33 @@ input.value {
 	width: 400px;
 }
 
+.trans-item {
+	position: relative;
+}
+
+.trans-item::before {
+	content: '';
+	position: absolute;
+	inset: -5px -1px;
+	border: 1px solid transparent;
+	border-radius: var(--border-radius);
+	transition: border-color 0.3s;
+	pointer-events: none;
+}
+
+.trans-item:has(.lang-row.highlighted)::before {
+	animation: border-fade 5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes border-fade {
+	10%, 90% {
+		border-color: var(--c-primary);
+	}
+	100% {
+		border-color: transparent;
+	}
+}
+
 .trans-item .delete-key {
 	opacity: 0;
 	pointer-events: none;
@@ -259,10 +303,6 @@ input.value {
 	translate: 0;
 }
 
-.key-wrapper {
-	display: flex;
-	align-items: center;
-}
 
 .key-wrapper svg {
 	width: 20px;
