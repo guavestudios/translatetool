@@ -370,6 +370,9 @@ class controller{
 		$critEmptyVal = array();
 		$critInCsvNotInDb = array();
 
+		$warnInDbNotInCsv = array();
+		$warnMoreLangInConfig = array();
+
 		//Check if there are the same languages in the csv as in the config defined,
 		//else an error-message is stored to the appropriate array.
 		Validator::checkConfigLangVsDataLang($configLang, $csvLang, $warnMoreLangInConfig, $critMoreLang);
