@@ -6,6 +6,10 @@
 	<meta charset="utf-8">
 	<base href="//<?= $_SERVER['HTTP_HOST'] . config::get('base') ?>">
 	<link href="gui/css/styles.css" rel="stylesheet" type="text/css">
+	<link
+		rel="stylesheet"
+		type="text/css"
+		href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
 	<script type="text/javascript" src="gui/js/main.js"></script>
 </head>
 

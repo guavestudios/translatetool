@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
 				cb.checked = false;
 			});
 			deleteSelectedBtn.style.display = multiDeleteMode ? '' : 'none';
-			multiDeleteBtn.textContent = multiDeleteMode ? 'Exit selection mode' : multiDeleteBtnText;
+			multiDeleteBtn.textContent = multiDeleteMode ? 'Exit Bulk Delete' : multiDeleteBtnText;
 		});
 
 		deleteSelectedBtn.addEventListener('click', function () {
@@ -109,8 +109,9 @@ document.addEventListener('DOMContentLoaded', function () {
 	if (addKeySection) {
 		addKeySection.addEventListener('keydown', function (e) {
 			if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+				console.log('Adding new key row');
 				e.preventDefault();
-				const transItem = addKeySection.querySelector('.trans-item:first-of-type');
+				const transItem = addKeySection.querySelector('.trans-item');
 				const clone = transItem.cloneNode(true)
 				function resetInputs(element) {
 					const allInputs = element.querySelectorAll('input[type="text"]');
@@ -127,4 +128,15 @@ document.addEventListener('DOMContentLoaded', function () {
 			}
 		});
 	}
+
+	const collapsibles = document.querySelectorAll('.collapsible');
+	collapsibles.forEach(function (collapsible) {
+		const header = collapsible.querySelector('.collapsible-header');
+		const content = collapsible.querySelector('.collapsible-content');
+		if (header && content) {
+			header.addEventListener('click', function () {
+				collapsible.classList.toggle('open');
+			});
+		}
+	});
 });
