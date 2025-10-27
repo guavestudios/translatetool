@@ -112,13 +112,23 @@ document.addEventListener('DOMContentLoaded', function () {
 				console.log('Adding new key row');
 				e.preventDefault();
 				const transItem = addKeySection.querySelector('.trans-item');
-				const clone = transItem.cloneNode(true)
+				const clone = transItem.cloneNode(true);
+				
+				// Remove the add-key-actions button from the clone
+				const addKeyActions = clone.querySelector('.add-key-actions');
+				if (addKeyActions) {
+					addKeyActions.remove();
+				}
+				
 				function resetInputs(element) {
 					const allInputs = element.querySelectorAll('input[type="text"]');
 					allInputs.forEach(el => { el.value = ''; });
 				}
-				resetInputs(clone)
-				addKeySection.append(clone)
+				resetInputs(clone);
+				
+				// Insert the clone before the original trans-item (which has the button)
+				transItem.parentNode.insertBefore(clone, transItem);
+				
 				const mainKeyInput = clone.querySelector('.keyname-input-main');
 				const syncInputs = clone.querySelectorAll('.sync-key');
 				syncMainWithSubInputs(mainKeyInput, syncInputs);
