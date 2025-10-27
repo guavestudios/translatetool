@@ -564,8 +564,7 @@ class controller{
 			if ($entry["value"] == NULL && $entry["language"] == NULL) 
 				continue;
 
-			$key = $keymap[$entry["parent_id"]].'.'.$entry["key"];
-			$data[$key][$entry['language']] = $entry;
+			$data[$entry["key"]][$entry['language']] = $entry;
 		}
 
 		//now we loop through all keypaths and check against the language count
@@ -575,9 +574,10 @@ class controller{
 				//there is one or more translations missing so we add them to the missings
 				$entry = reset($entrylang);
 				$miss = array(
-					'key' => $k,
+					'key' => $entry["key"],
 					'folder_id' => $entry['parent_id'],
 					'folder_name' => $keymap[$entry['parent_id']],
+					'row_id' => $entry['id'],
 					'languages' => array()
 				);
 
