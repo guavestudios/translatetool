@@ -21,6 +21,7 @@
 
 	--c-error: rgb(160, 0, 0);
 
+	--spacing-2xs: 0.125rem;
 	--spacing-xs: 0.25rem;
 	--spacing-sm: 0.5rem;
 	--spacing-md: 1rem;
@@ -122,7 +123,7 @@ button svg {
 }
 
 input:hover {
-	border: 1px #999 solid;
+	border-bottom: 1px var(--c-primary) solid;
 }
 
 input[type=submit] {
@@ -373,9 +374,18 @@ input.value {
 .trans-item .delete-key {
 	opacity: 0;
 	pointer-events: none;
-	translate: -6px;
+	translate: 1rem;
 	transition: opacity 0.2s ease, translate 0.2s ease;
-	color: var(--c-error);
+	text-decoration: none;
+	position: absolute;
+	right: 0;
+	bottom: 1px;
+	background: var(--c-base);
+	width: 2em;
+	height: 2em;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .trans-item:hover .delete-key {
@@ -387,6 +397,7 @@ input.value {
 .key-wrapper {
 	display: flex;
 	align-items: center;
+	position: relative;
 }
 
 .key-wrapper input[type=text] {

@@ -29,9 +29,7 @@
 						<input type="checkbox" class="multi-delete-checkbox">
 						<input type="text" name="keyname[]" value="<?= htmlspecialchars($key['keyName']) ?>" class="keyname-input-main" placeholder="Key Name" pattern="^\S+$" title="No spaces allowed">
 						<a class="delete-key" data-active="<?= $active ?>">
-							<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 32 32">
-								<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m3.04 3.04 25.92 25.92m0-25.92L3.04 28.96" />
-							</svg>
+							<i class="delete-key ph ph-trash"></i>
 						</a>
 					</div>
 					<div class="values-container">
