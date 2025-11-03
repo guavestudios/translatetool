@@ -174,7 +174,7 @@ class Validator {
 	* @return String										The key of the row with the invalid format.
 	*/
 	public static function checkInvalidFormat($row, &$critInvalidFormat) {
-		if(!preg_match("/^([a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]+)+$/", $row['key'])) {
+		if(!preg_match("/^([a-zA-Z0-9_-]{2,})(\.[a-zA-Z0-9_-]+)+$/", $row['key'])) {
 			if(isset($row['row'])) {
 				$critInvalidFormat[] = 'CRITICAL ERROR: The key "' . $row['key'] . '" on row ' . $row['row'] . ' has an invalid format.';
 			} else {
