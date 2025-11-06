@@ -46,12 +46,26 @@ class csv extends AbstractBaseAdapter{
 			throw new \Exception("File {$file} not found");
 		}
 
-		$csv = new \parseCSV;
-		$csv->linefeed = "\n";
-		$csv->delimiter = ";";
-		$csv->parse($file);
-		$csvData = $csv;
-		$csvData = $csvData->data;
+		// Use PHP's built-in CSV parsing instead of parseCSV library
+		$csvData = array();
+		if (($handle = fopen($file, "r")) !== FALSE) {
+			$headers = null;
+			while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
+				if ($headers === null) {
+					$headers = $data;
+				} else {
+					$row = array();
+					for ($i = 0; $i < count($headers); $i++) {
+						// Unescape quotes - convert \" back to "
+						$value = isset($data[$i]) ? $data[$i] : '';
+						$value = str_replace('\"', '"', $value);
+						$row[$headers[$i]] = $value;
+					}
+					$csvData[] = $row;
+				}
+			}
+			fclose($handle);
+		}
 
 		$csvData = array_map(function($row) {
 			foreach ($row as $key => $value) {
