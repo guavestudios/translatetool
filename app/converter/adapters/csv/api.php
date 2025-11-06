@@ -53,6 +53,15 @@ class csv extends AbstractBaseAdapter{
 		$csvData = $csv;
 		$csvData = $csvData->data;
 
+		$csvData = array_map(function($row) {
+			foreach ($row as $key => $value) {
+				if ($key !== 'key') {
+					$row[$key] = str_replace('\"', '"', $value);
+				}
+			}
+			return $row;
+		}, $csvData);
+
 		return $csvData;
 	}
 

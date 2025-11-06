@@ -103,6 +103,9 @@ class parseCSV {
 	# delimiter (comma) and enclosure (double quote)
 	var $delimiter = ',';
 	var $enclosure = '"';
+
+	# escape character
+	var $escapeChar = "\\";
 	
 	# basic SQL-like conditions for row matching
 	var $conditions = null;
@@ -388,7 +391,7 @@ class parseCSV {
 			$pch = ( isset($data{$i-1}) ) ? $data{$i-1} : false ;
 			
 			// open/close quotes, and inline quotes
-			if ( $ch == $this->enclosure ) {
+			if ( $ch == $this->enclosure && $pch != $this->escapeChar ) {
 				if ( !$enclosed ) {
 					if ( ltrim($current, $white_spaces) == '' ) {
 						$enclosed = true;
