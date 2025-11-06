@@ -315,4 +315,158 @@ class Validator
 			$warnInDbNotInData[] = 'WARNING: The following keys are stored in the DB but not provided in the CSV: <br>' . implode('<br>', $inDbNotInData);
 		}
 	}
+
+	/**
+	 * Extract the folder key from a dot-delimited key by removing the last part.
+	 *
+	 * @param  String $dotDelimitedKey	The full dot-delimited key.
+	 * @return String					The folder key without the final part.
+	 */
+	public static function getFolderKeyFromDotDelimitedKey($dotDelimitedKey)
+	{
+		$parts = explode('.', $dotDelimitedKey);
+		if (count($parts) >= 2) {
+			return $parts[count($parts) - 2];
+		}
+		return '';
+	}
+
+	/**
+	 * Get the parent ID for a given folder key by traversing the folder hierarchy.
+	 *
+	 * @param  String $folderKey		The folder key to find the parent ID for.
+	 * @param  Array  $dbDataIndexed	Contains all DB-Data in an indexed form.
+	 * @return Integer|null			The parent ID, 0 for root, or null if not found.
+	 */
+	public static function getParentIdForFolderKey($folderKey, $dbDataIndexed)
+	{
+		if (empty($folderKey)) {
+			return 0; // root
+		}
+		$parts = explode('.', $folderKey);
+		$parentId = 0;
+		foreach ($parts as $part) {
+			$found = false;
+			foreach ($dbDataIndexed as $entry) {
+				if ($entry['key'] == $part && $entry['parent_id'] == $parentId && is_null($entry['language'])) {
+					$parentId = $entry['id'];
+					$found = true;
+					break;
+				}
+			}
+			if (!$found) {
+				return null; // folder not found
+			}
+		}
+		return $parentId;
+	}
+
+	/**
+	 * Check if the value from CSV matches the existing value in the database
+	 * for the given key and language combination.
+	 *
+	 * @param  String $key           The dot-delimited key to check
+	 * @param  String $language      The language code to check
+	 * @param  String $csvValue      The value from the CSV
+	 * @param  Array  $dbDataIndexed Contains all DB-Data in an indexed form
+	 * @return Array                 Contains status and details about the comparison
+	 */
+	public static function checkValueMatch($key, $language, $csvValue, $dbDataIndexed)
+	{
+		// Get existing value from database
+		$existingValue = self::getExistingValue($key, $language, $dbDataIndexed);
+
+		if ($existingValue === null) {
+			return array(
+				'status' => 'new',
+				'existing_value' => null,
+				'csv_value' => $csvValue
+			);
+		}
+
+		if ($existingValue === $csvValue) {
+			return array(
+				'status' => 'unchanged',
+				'existing_value' => $existingValue,
+				'csv_value' => $csvValue
+			);
+		}
+
+		return array(
+			'status' => 'changed',
+			'existing_value' => $existingValue,
+			'csv_value' => $csvValue
+		);
+	}
+
+	/**
+	 * Get the existing value from the database for a given key and language.
+	 *
+	 * @param  String $key           The dot-delimited key
+	 * @param  String $language      The language code
+	 * @param  Array  $dbDataIndexed Contains all DB-Data in an indexed form
+	 * @return String|null           The existing value or null if not found
+	 */
+	private static function getExistingValue($key, $language, $dbDataIndexed)
+	{
+		$parts = explode('.', $key);
+		$keyName = array_pop($parts);
+		$folderKey = implode('.', $parts);
+
+		$parentId = self::getParentIdForFolderKey($folderKey, $dbDataIndexed);
+
+		if ($parentId === null) {
+			return null; // Folder path doesn't exist
+		}
+
+		// Find the entry with matching key, language, and parent_id
+		foreach ($dbDataIndexed as $entry) {
+			if (
+				$entry['key'] === $keyName &&
+				$entry['language'] === $language &&
+				$entry['parent_id'] === $parentId
+			) {
+				return $entry['value'];
+			}
+		}
+
+		return null; // Entry not found
+	}
+
+	/**
+	 * Batch check multiple CSV rows against database values.
+	 *
+	 * @param  Array $csvData        Array of CSV rows to check
+	 * @param  Array $dbDataIndexed  Contains all DB-Data in an indexed form
+	 * @return Array                 Summary of changes, conflicts, and new entries
+	 */
+	public static function compareCSVWithDatabase($csvData, $dbDataIndexed)
+	{
+		$results = array(
+			'unchanged' => array(),
+			'changed' => array(),
+			'new' => array(),
+			'summary' => array()
+		);
+
+		foreach ($csvData as $row) {
+			foreach (\config::get('languages') as $lang) {
+				if (isset($row[$lang]) && !empty($row[$lang])) {
+					$comparison = self::checkValueMatch($row['key'], $lang, $row[$lang], $dbDataIndexed);
+					$results[$comparison['status']][] = array_merge($comparison, array(
+						'key' => $row['key'],
+						'language' => $lang
+					));
+				}
+			}
+		}
+
+		$results['summary'] = array(
+			'unchanged_count' => count($results['unchanged']),
+			'changed_count' => count($results['changed']),
+			'new_count' => count($results['new'])
+		);
+
+		return $results;
+	}
 }
