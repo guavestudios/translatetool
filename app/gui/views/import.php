@@ -158,11 +158,12 @@
 		const hasNewEntries = <?= !empty($csvData['new']) ? 'true' : 'false' ?>;
 
 		function updateSubmitButton() {
+			if (!submitBtn) return;
 			const shouldEnable = hasChangedEntries || (hasNewEntries && checkbox.checked);
 			submitBtn.disabled = !shouldEnable;
 		}
 
-		checkbox.addEventListener('change', updateSubmitButton);
+		checkbox?.addEventListener('change', updateSubmitButton);
 		updateSubmitButton(); // Initial check
 
 		const fileInput = document.getElementById('file-upload');

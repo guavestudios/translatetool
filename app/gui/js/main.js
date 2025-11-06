@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	// Multi-delete mode logic
 	const multiDeleteBtn = document.getElementById('multiDeleteModeBtn');
-	const multiDeleteBtnText = multiDeleteBtn.innerText
+	const multiDeleteBtnText = multiDeleteBtn?.innerText;
 	const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
 	let multiDeleteMode = false;
 
