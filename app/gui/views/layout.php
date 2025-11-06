@@ -2,7 +2,7 @@
 <html>
 
 <head>
-	<title>Languave</title>
+	<title>LanGuave</title>
 	<meta charset="utf-8">
 	<base href="//<?= $_SERVER['HTTP_HOST'] . config::get('base') ?>">
 	<link href="gui/css/styles.css" rel="stylesheet" type="text/css">
@@ -16,7 +16,7 @@
 <body>
 	<div id="wrapper">
 		<header class="page-header">
-			<h1>Languave</h1>
+			<h1>LanGuave</h1>
 			<div class="page-header__actions">
 				<a href="nottranslated">pending translations</a>
 				<?php if (config::get('export_download')): ?>

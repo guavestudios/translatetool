@@ -1,3 +1,6 @@
+@import 'import.css';
+@import 'https://fast.fonts.net/t/1.css?apiType=css&projectid=21e2d220-4a47-47b9-84df-3289bbc622b0';
+
 :root {
 	/* // FONT SIZES */
 	--font-sm: 0.85rem;
@@ -35,7 +38,6 @@
 	--border-radius-xl: 1rem;
 }
 
-@import 'https://fast.fonts.net/t/1.css?apiType=css&projectid=21e2d220-4a47-47b9-84df-3289bbc622b0';
 
 @font-face {
 	font-family: 'Avenir Next Guave';
@@ -80,22 +82,6 @@ a:hover {
 	text-decoration: underline;
 }
 
-input[type='submit'],
-button,
-.btn {
-	border: 1px #ccc solid;
-	font: inherit;
-	color: currentColor;
-	background: var(--c-base-light);
-	border-color: transparent;
-	border-radius: var(--border-radius);
-	display: inline-flex;
-	gap: var(--spacing-xs);
-	align-items: center;
-	font-size: var(--font-sm);
-	padding: var(--spacing-sm) var(--spacing-md);
-}
-
 input {
 	padding: var(--spacing-xs) 0;
 	background: transparent;
@@ -108,8 +94,37 @@ input {
 	transition: border-bottom-color 0.3s ease;
 }
 
-input:focus {
+/* input:focus {
 	border-bottom-color: var(--c-primary);
+} */
+
+.btn {
+	border: none;
+	font: inherit;
+	color: currentColor;
+	background: var(--c-base-light);
+	border-radius: var(--border-radius);
+	display: inline-flex;
+	gap: var(--spacing-xs);
+	align-items: center;
+	font-size: var(--font-sm);
+	padding: var(--spacing-sm) var(--spacing-md);
+	cursor: pointer;
+
+	&:hover {
+		text-decoration: none;
+	}
+
+	&:disabled {
+		background: var(--c-base-dark);
+		color: var(--c-text-light);
+		cursor: not-allowed;
+	}
+}
+
+.btn--primary {
+	background: var(--c-primary);
+	color: var(--c-text-inverse);
 }
 
 .btn--error {
@@ -122,11 +137,11 @@ button svg {
 	height: 1em;
 }
 
-input:hover {
+/* input:hover {
 	border-bottom: 1px var(--c-primary) solid;
-}
+} */
 
-input[type=submit] {
+/* input[type=submit], .custom-file-upload, .button {
 	background: var(--c-primary);
 	border: none;
 	color: var(--c-text-inverse);
@@ -134,7 +149,16 @@ input[type=submit] {
 	cursor: pointer;
 	font-size: var(--font-sm);
 	transition: background-color 0.3s ease;
-}
+	display: flex;
+	align-items: center;
+	padding: var(--spacing-sm) var(--spacing-md);
+
+	&:disabled {
+		background: var(--c-base-light);
+		color: var(--c-text-light);
+		cursor: not-allowed;
+	}
+} */
 
 input[type=submit]:active,
 input[type=button]:active {
@@ -145,27 +169,40 @@ input.value {
 	width: 100%;
 }
 
-.multi-delete-mode .multi-delete-checkbox {
+.button--secondary {
+	background: var(--c-base-light);
+	color: var(--c-text);
+}
+
+.checkbox-container {
+	pointer-events: none;
+	opacity: 0;
+	width: 0;
+	flex: 0 0 0;
+	transition: opacity 0.2s ease, width 0.2s ease, flex 0.2s ease;
+}
+
+.multi-delete-mode .checkbox-container {
+	pointer-events: auto;
 	opacity: 1;
 	width: 16px;
+	flex: 0 0 16px;
+	margin-right: var(--spacing-sm);
+}
+
+.custom-checkbox {
+	height: 16px;
+	width: 16px;
+	appearance: none;
+	cursor: pointer;
+	transition: all 0.2s ease;
 	margin-right: var(--spacing-sm);
 	border: 2px solid var(--c-primary);
-	flex: 0 0 16px;
 	border-radius: 999px;
 	background: var(--c-base-light);
 }
 
-.multi-delete-checkbox {
-	height: 16px;
-	appearance: none;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	margin: 0;
-	padding: 0;
-	border: 0;
-}
-
-.multi-delete-checkbox:checked {
+.custom-checkbox:checked {
 	background: var(--c-primary);
 }
 
@@ -233,13 +270,6 @@ input.value {
 	display: grid;
 	grid-template-columns: subgrid;
 	border-bottom: 1px solid var(--c-border);
-}
-
-.bulk-container {
-	display: flex;
-	gap: var(--spacing-sm);
-	grid-column: 1 / -1;
-	margin-bottom: var(--spacing-md);
 }
 
 .form-actions {
@@ -477,6 +507,8 @@ input.value {
 	align-items: center;
 	gap: var(--spacing-sm);
 	padding: var(--spacing-md) 0;
+	cursor: pointer;
+	user-select: none;
 }
 
 .collapsible .collapsible-content {

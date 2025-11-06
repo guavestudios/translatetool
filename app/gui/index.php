@@ -51,6 +51,7 @@ Flight::route('/update', array('controller', 'updateDb'));
 Flight::route('/search', array('controller', 'search'));
 Flight::route('/convert', array('controller', 'convertKey'));
 Flight::route('/import', array('controller', 'import'));
+Flight::route('POST /import/confirm', array('controller', 'confirmImport'));
 Flight::route('/nottranslated', array('controller', 'nottranslated'));
 
 Flight::route('/widget/update', array('widgetController', 'update'));
@@ -364,11 +365,11 @@ class controller
 		}
 	}
 
-	public static function importCSV($csvPath = null, $importValuesInCsvNotInDb = true)
+	public static function validateCSV($csvPath)
 	{
 		$converter = new converter();
-		if ($csvPath === null or !file_exists($csvPath)) {
-			$csvPath = $_SERVER['DOCUMENT_ROOT'] . config::get('base') . 'castle_trans.csv';
+		if (!file_exists($csvPath)) {
+			return array('errors' => array('File not found'));
 		}
 
 		//Get all data from the csv-to-import
@@ -393,9 +394,6 @@ class controller
 		$critInvalidFormat = array();
 		$critEmptyVal = array();
 		$critInCsvNotInDb = array();
-
-		$warnInDbNotInCsv = array();
-		$warnMoreLangInConfig = array();
 
 		//Check if there are the same languages in the csv as in the config defined,
 		//else an error-message is stored to the appropriate array.
@@ -429,17 +427,11 @@ class controller
 		// $currentPath 	holds the path to the last csv-item
 		// $newPath				holds the path to the next/current csv-item
 		foreach ($checkCsvData as $key => $row) {
-
-			$newPath = array();
 			$newPath = explode('.', $row['key']);
-
 			Validator::checkForDuplicates($row, $newPath, $currentPath, $checkCsvData, $critDuplicate);
 			$currentPath = Validator::checkForFolderIsFile($row, $newPath, $currentPath, $checkCsvData, $critFolder);
-
 			$invalidFormat[] = Validator::checkInvalidFormat($row, $critInvalidFormat);
-
 			Validator::checkEmptyValuesInData($configLang, $row, $critEmptyVal);
-
 			$csvKeys[] = $row['key'];
 		}
 
@@ -448,8 +440,7 @@ class controller
 
 		//	Get all keys that are in the DB but are missing in the csv
 		Validator::checkInDbNotInData($dbKeys, $csvKeys, $warnInDbNotInCsv);
-
-		Validator::checkInDataNotInDb($importValuesInCsvNotInDb, $csvKeys, $dbKeys, $invalidFormat, $critInCsvNotInDb);
+		Validator::checkInDataNotInDb(true, $csvKeys, $dbKeys, $invalidFormat, $critInCsvNotInDb);
 
 		//Combine all critical errors in one array.
 		$critical['tooManyLangErrors'] = $critMoreLang;
@@ -459,29 +450,43 @@ class controller
 		$critical['emptyValueErrors'] = $critEmptyVal;
 		$critical['inCsvNotInDbErrors'] = $critInCsvNotInDb;
 
-		$warnings['inDbNotInCsvWarning'] = $warnInDbNotInCsv;
-		$warnings['moreLangInConfigWarning'] = $warnMoreLangInConfig;
+		$valueComparison = Validator::compareCSVWithDatabase($csv, $dbDataIndexed);
 
-		$conflicts = array();
-		$conflicts['criticalErrors'] = $critical;
-		$conflicts['warnings'] = $warnings;
+		// Return validation results without importing
+		return array(
+			'errors' => $critical,
+			'warnings' => $warnings,
+			'value_comparison' => $valueComparison
+		);
+	}
 
-		//If there are critical errors return them and abort the import.
-		foreach ($critical as $err) {
-			if (count($err) > 0) {
-				return $conflicts;
-			}
+	public static function performCSVImport($csvPath, $importValuesInCsvNotInDb = false)
+	{
+		// Import with validation - respect the checkbox setting
+		$converter = new converter();
+		$csv = $converter->load('csv', $csvPath);
+
+		// Get existing database keys if we need to check
+		if (!$importValuesInCsvNotInDb) {
+			$dbData = translations::get(array(), array('key'));
+			$dbDataIndexed = Validator::getIndexedDbData($dbData);
+			$dbKeys = Validator::getKeysInDb($dbDataIndexed);
 		}
 
 		foreach ($csv as $row) {
+			$rowKey = $row['key'];
+			
+			// Skip if this key doesn't exist in DB and checkbox is not selected
+			if (!$importValuesInCsvNotInDb && !in_array($rowKey, $dbKeys)) {
+				continue;
+			}
+
 			foreach (config::get('languages') as $lang) {
 				if (isset($row[$lang])) {
 					self::insertDotDelimitedKeyValue($row['key'], $row[$lang], $lang, true);
 				}
 			}
 		}
-		//If there are any warnings return them
-		if (count($warnings) > 0) return $conflicts;
 		return array();
 	}
 
@@ -559,19 +564,62 @@ class controller
 
 	public static function import()
 	{
-		$imported = false;
-		$conflicts['criticalErrors'] = array();
-		$conflicts['warnings'] = array();
-		$countErrors = 0;
-		$countWarnings = 0;
+		$errors = array();
+		$uploaded = false;
+
 		if (isset($_FILES['csv']['name'])) {
-			$importValuesInCsvNotInDb = isset($_POST['importValuesInCsvNotInDb']) ? $_POST['importValuesInCsvNotInDb'] : false;
-			$conflicts = self::importCSV($_FILES['csv']['tmp_name'], $importValuesInCsvNotInDb);
-			$imported = true;
-			$countErrors = self::countTwoDimensionalArray($conflicts['criticalErrors']);
-			$countWarnings = self::countTwoDimensionalArray($conflicts['warnings']);
+			$uploaded = true;
+			$tempFile = sys_get_temp_dir() . '/translatetool_' . session_id() . '.csv';
+			move_uploaded_file($_FILES['csv']['tmp_name'], $tempFile);
+
+			// Use the comprehensive validation
+			$validation = self::validateCSV($tempFile);
+			$valueComparison = $validation['value_comparison'];
+
+			// Convert validation errors to simple error messages
+			$errors = array();
+			foreach ($validation['errors'] as $errorType => $errorList) {
+				foreach ($errorList as $error) {
+					$errors[] = is_array($error) ? implode(', ', $error) : $error;
+				}
+			}
+
+			// Only store file if validation passes
+			if (empty($errors)) {
+				$_SESSION['pending_csv'] = $tempFile;
+			} else {
+				unlink($tempFile); // Clean up on validation failure
+			}
 		}
-		self::render('import', array('imported' => $imported, 'countErrors' => $countErrors, 'countWarnings' => $countWarnings, 'errors' => $conflicts['criticalErrors'], 'warnings' => $conflicts['warnings'], 'active' => 0));
+
+		self::render('import', array(
+			'csvData' => isset($valueComparison) ? $valueComparison : array(),
+			'errors' => $errors,
+			'uploaded' => $uploaded,
+			'active' => 0
+		));
+	}
+
+	public static function confirmImport()
+	{
+		// Step 2: Actually perform the import
+		if (!isset($_SESSION['pending_csv']) || !file_exists($_SESSION['pending_csv'])) {
+			self::redirect('import');
+			return;
+		}
+
+		$importValuesInCsvNotInDb = isset($_POST['importValuesInCsvNotInDb']) && $_POST['importValuesInCsvNotInDb'] === 'true';
+		$conflicts = self::performCSVImport($_SESSION['pending_csv'], $importValuesInCsvNotInDb);
+
+		// Clean up temp file
+		unlink($_SESSION['pending_csv']);
+		unset($_SESSION['pending_csv']);
+
+		self::render('import_result', array(
+			'conflicts' => $conflicts,
+			'success' => empty($conflicts['criticalErrors']),
+			'active' => 0
+		));
 	}
 
 	/**

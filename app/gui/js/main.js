@@ -54,8 +54,8 @@ document.addEventListener('DOMContentLoaded', function () {
 	if (multiDeleteBtn) {
 		multiDeleteBtn.addEventListener('click', function () {
 			multiDeleteMode = !multiDeleteMode;
-			document.querySelectorAll('.multi-delete-checkbox').forEach(cb => {
-				document.documentElement.classList.toggle('multi-delete-mode', multiDeleteMode);
+			document.documentElement.classList.toggle('multi-delete-mode', multiDeleteMode);
+			document.querySelectorAll('.custom-checkbox').forEach(cb => {
 				cb.checked = false;
 			});
 			deleteSelectedBtn.style.display = multiDeleteMode ? '' : 'none';
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 
 		deleteSelectedBtn.addEventListener('click', function () {
-			const checked = Array.from(document.querySelectorAll('.multi-delete-checkbox:checked'));
+			const checked = Array.from(document.querySelectorAll('.custom-checkbox:checked'));
 			if (checked.length === 0) return;
 			const keyNames = checked.map(cb => {
 				const container = cb.closest('.trans-item');

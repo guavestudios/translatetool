@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Languave - Login</title>
+		<title>LanGuave - Login</title>
 		<base href="//<?= $_SERVER['HTTP_HOST'].config::get('base') ?>">
 		<link href="gui/css/styles.css" rel="stylesheet" type="text/css">
 	</head>
