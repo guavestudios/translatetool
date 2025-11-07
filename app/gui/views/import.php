@@ -1,7 +1,38 @@
 <div class="import-container">
 	<h1>Import CSV</h1>
 
-	<?php if (!$uploaded): ?>
+	<?php if ($hasErrors): ?>
+		<div class="validation-errors">
+			<h3>Validation Errors Found</h3>
+
+			<?php
+			$errorTypeNames = array(
+				'tooManyLangErrors' => 'Language Configuration',
+				'duplicateErrors' => 'Duplicate Key',
+				'folderIsFileErrors' => 'Folder/File Conflict',
+				'invalidFormatErrors' => 'Invalid Key Format',
+				'emptyValueErrors' => 'Empty Value',
+				'inCsvNotInDbErrors' => 'Keys Not in Database'
+			);
+			?>
+			<?php foreach ($errors as $errorType => $errorList): ?>
+				<?php if (!empty($errorList)): ?>
+					<div class="error-group <?php echo str_replace('Errors', '-errors', strtolower($errorType)); ?>">
+						<h4>
+							<?php echo isset($errorTypeNames[$errorType]) ? $errorTypeNames[$errorType] : ucfirst($errorType); ?>
+						</h4>
+						<ul>
+							<?php foreach ($errorList as $error): ?>
+								<li><?php echo htmlspecialchars($error); ?></li>
+							<?php endforeach; ?>
+						</ul>
+					</div>
+				<?php endif; ?>
+			<?php endforeach; ?>
+		</div>
+	<?php endif ?>
+
+	<?php if (!$uploaded || $hasErrors): ?>
 		<div class="upload-file-section">
 			<!-- Step 1: File Upload Form -->
 			<form method="post" enctype="multipart/form-data">
@@ -39,20 +70,21 @@
 				"dot.delimited.key"<?php foreach (config::get('languages') as $language): ?>;"<?= htmlspecialchars(strtoupper($language)) ?> string"<?php endforeach; ?></p>
 		</section>
 
-	<?php else: ?>
-		<!-- Step 2: Show validation results and confirmation -->
-		<?php if (!empty($errors)): ?>
-			<h2>Validation Errors</h2>
-			<ul style="color: red;">
-				<?php foreach ($errors as $error): ?>
-					<li><?= htmlspecialchars($error) ?></li>
-				<?php endforeach; ?>
-			</ul>
-			<p><a href="<?= config::get('base') ?>import">Please fix the errors and upload the file again, you can do it!</a></p>
+	<?php elseif (!$hasErrors): ?>
+		<?php
+		$hasNewEntries = !empty($csvData['new']);
+		$hasChangedEntries = !empty($csvData['changed']);
+		$hasOnlyUnchanged = !$hasNewEntries && !$hasChangedEntries && !empty($csvData['summary']['unchanged_count']);
+		?>
 
+		<?php if ($hasOnlyUnchanged): ?>
+			<div class="no-import-needed">
+				<h3>Nothing to Import</h3>
+				<p>All <?= $csvData['summary']['unchanged_count'] ?> entries in the CSV file already exist in the database with the same values. No import is necessary.</p>
+				<a class="btn btn--primary" href="<?= config::get('base') ?>import">Upload Another File</a>
+			</div>
 		<?php else: ?>
 			<div>
-				<!-- <h3>Value Comparison Results</h3> -->
 				<?php if (!empty($csvData)): ?>
 					<!-- Summary -->
 					<?php if (isset($csvData['summary'])): ?>

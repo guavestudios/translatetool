@@ -59,7 +59,7 @@ class Validator
 				$warnMoreLangInConfig[] = 'WARNING: The config has defined ' . (count($configLang) - count($dataLang)) . ' more language(s) than the data provides';
 			} else {
 				$additionalDataLang = array_diff($dataLang, $configLang);
-				$critMoreLang[] = 'CRITICAL ERROR: The data contains more languages than the config has defined: ' . implode(', ', $additionalDataLang);
+				$critMoreLang[] = 'The data contains more languages than the config has defined: [' . implode(',', $additionalDataLang) . ']';
 			}
 		}
 	}
@@ -111,16 +111,19 @@ class Validator
 	public static function checkForDuplicates($row, $newPath, $oldPath, $data, &$critDuplicate)
 	{
 		if ($oldPath !== $newPath) return;
+		
 		if (isset($row['row'])) {
-			$critDuplicate[$row['row']] = 'CRITICAL ERROR: The key "' . $row['key'] . '" on row ' . $row['row'] . ' is a duplicate.';
+			$critDuplicate[$row['row']] = '"' . $row['key'] . '" (row ' . $row['row'] . ')';
 			foreach ($data as $ro) {
-				//Search duplicate
-				if (($ro['key'] === implode('.', $oldPath)) && $row['row'] !== $ro['row']) {
-					$critDuplicate[$ro['row']] = 'CRITICAL ERROR: The key "' . $row['key'] . '" on row ' . $ro['row'] . ' is a duplicate.';
+				//Search duplicate - fix: use $row['key'] instead of implode('.', $oldPath)
+				if (($ro['key'] === $row['key']) && $row['row'] !== $ro['row']) {
+					$critDuplicate[$ro['row']] = '"' . $ro['key'] . '" (row ' . $ro['row'] . ')';
 				}
 			}
 		} else {
-			$critDuplicate[$row['row']] = 'CRITICAL ERROR: The key "' . $row['key'] . ' is a duplicate.';
+			// Fix: missing closing quote and ensure proper array key handling
+			$key = isset($row['key']) ? $row['key'] : '';
+			$critDuplicate[] = '"' . $key;
 		}
 	}
 
@@ -153,8 +156,12 @@ class Validator
 
 		$commonPath = array();
 
-		for ($i = 0; $i < count($oldPath); $i++) {
-			if (isset($oldPath[$i]) && isset($newPath[$i]) && $oldPath[$i] === $newPath[$i]) $commonPath[] = $oldPath[$i];
+		// Ensure $oldPath and $newPath are arrays
+		$oldPathArray = is_array($oldPath) ? $oldPath : explode('.', $oldPath);
+		$newPathArray = is_array($newPath) ? $newPath : explode('.', $newPath);
+
+		for ($i = 0; $i < count($oldPathArray); $i++) {
+			if (isset($oldPathArray[$i]) && isset($newPathArray[$i]) && $oldPathArray[$i] === $newPathArray[$i]) $commonPath[] = $oldPathArray[$i];
 		}
 
 		if ($commonPath && $commonPath == $oldPath) {
@@ -164,9 +171,9 @@ class Validator
 				foreach ($data as $r) {
 					if ($r['key'] === $oldKey) $oldRow = $r['row'];
 				}
-				$critFolder[] = 'CRITICAL ERROR: The folder "' . $row['key'] . '" on row ' . $row['row'] . ' is in a folder that is already present as key: ' . implode('.', $oldPath) . ' on row ' . $oldRow;
+				$critFolder[] = 'The folder "' . $row['key'] . '" on row ' . $row['row'] . ' is in a folder that is already present as key: ' . implode('.', $oldPath) . ' on row ' . $oldRow;
 			} else {
-				$critFolder[] = 'CRITICAL ERROR: The folder "' . $row['key'] . ' is in a folder that is already present as key: ' . implode('.', $oldPath);
+				$critFolder[] = 'The folder "' . $row['key'] . ' is in a folder that is already present as key: ' . implode('.', $oldPath);
 			}
 		}
 		return $newPath;
@@ -185,13 +192,10 @@ class Validator
 	public static function checkInvalidFormat($row, &$critInvalidFormat)
 	{
 		if (!preg_match("/^([a-zA-Z0-9_-]{2,})(\.[a-zA-Z0-9_-]+)+$/", $row['key'])) {
-			if (isset($row['row'])) {
-				$critInvalidFormat[] = 'CRITICAL ERROR: The key "' . $row['key'] . '" on row ' . $row['row'] . ' has an invalid format.';
-			} else {
-				$critInvalidFormat[] = 'CRITICAL ERROR: The key "' . $row['key'] . ' has an invalid format.';
-			}
+			$rowInfo = isset($row['row']) ? ' (row ' . $row['row'] . ')' : '';
+			$critInvalidFormat[] = '"' . $row['key'] . '"' . $rowInfo;
 			return $row['key'];
-		};
+		}
 	}
 
 	/**
@@ -205,13 +209,10 @@ class Validator
 	 */
 	public static function checkEmptyValuesInData($configLang, $row, &$critEmptyVal)
 	{
-		foreach ($configLang as $i => $l) {
-			if (array_key_exists($l, $row) && !$row[$l]) {
-				if (isset($row['row'])) {
-					$critEmptyVal[] = 'CRITICAL ERROR: The key "' . $row['key'] . '" on row ' . $row['row'] . ' for the language "' . $l . '" is empty.';
-				} else {
-					$critEmptyVal[] = 'CRITICAL ERROR: The key "' . $row['key'] . ' for the language "' . $l . '" is empty.';
-				}
+		foreach ($configLang as $l) {
+			if (isset($row[$l]) && empty($row[$l])) {
+				$rowInfo = isset($row['row']) ? ' (row ' . $row['row'] . ')' : '';
+				$critEmptyVal[] = '"' . $row['key'] . '" [' . $l . ']' . $rowInfo;
 			}
 		}
 	}
@@ -274,7 +275,7 @@ class Validator
 			$inDataNotInDb = array_diff($dataKeys, $dbKeys);
 			$inDataNotInDb = array_diff($inDataNotInDb, $invalidFormat);
 			if (count($inDataNotInDb) > 0) {
-				$critInDataNotInDb[] = 'CRITICAL ERROR: The following keys are provided in the CSV but not found in the DB: <br>' . implode('<br>', $inDataNotInDb);
+				$critInDataNotInDb[] = 'The following keys are provided in the CSV but not found in the DB: <br>' . implode('<br>', $inDataNotInDb);
 			}
 		}
 	}

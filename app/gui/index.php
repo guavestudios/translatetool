@@ -443,12 +443,14 @@ class controller
 		Validator::checkInDataNotInDb(true, $csvKeys, $dbKeys, $invalidFormat, $critInCsvNotInDb);
 
 		//Combine all critical errors in one array.
-		$critical['tooManyLangErrors'] = $critMoreLang;
-		$critical['duplicateErrors'] = $critDuplicate;
-		$critical['folderIsFileErrors'] = $critFolder;
-		$critical['invalidFormatErrors'] = $critInvalidFormat;
-		$critical['emptyValueErrors'] = $critEmptyVal;
-		$critical['inCsvNotInDbErrors'] = $critInCsvNotInDb;
+		$critical = array(
+			'tooManyLangErrors' => $critMoreLang,
+			'duplicateErrors' => $critDuplicate,
+			'folderIsFileErrors' => $critFolder,
+			'invalidFormatErrors' => $critInvalidFormat,
+			'emptyValueErrors' => $critEmptyVal,
+			'inCsvNotInDbErrors' => $critInCsvNotInDb
+		);
 
 		$valueComparison = Validator::compareCSVWithDatabase($csv, $dbDataIndexed);
 
@@ -475,7 +477,7 @@ class controller
 
 		foreach ($csv as $row) {
 			$rowKey = $row['key'];
-			
+
 			// Skip if this key doesn't exist in DB and checkbox is not selected
 			if (!$importValuesInCsvNotInDb && !in_array($rowKey, $dbKeys)) {
 				continue;
@@ -576,16 +578,21 @@ class controller
 			$validation = self::validateCSV($tempFile);
 			$valueComparison = $validation['value_comparison'];
 
+			// Check if there are any errors across all categories
+			$hasErrors = self::countTwoDimensionalArray($validation['errors']) > 0;
+
 			// Convert validation errors to simple error messages
 			$errors = array();
-			foreach ($validation['errors'] as $errorType => $errorList) {
-				foreach ($errorList as $error) {
-					$errors[] = is_array($error) ? implode(', ', $error) : $error;
+			if ($hasErrors) {
+				foreach ($validation['errors'] as $errorType => $errorList) {
+					foreach ($errorList as $error) {
+						$errors[] = is_array($error) ? implode(', ', $error) : $error;
+					}
 				}
 			}
 
 			// Only store file if validation passes
-			if (empty($errors)) {
+			if (!$hasErrors) {
 				$_SESSION['pending_csv'] = $tempFile;
 			} else {
 				unlink($tempFile); // Clean up on validation failure
@@ -594,7 +601,8 @@ class controller
 
 		self::render('import', array(
 			'csvData' => isset($valueComparison) ? $valueComparison : array(),
-			'errors' => $errors,
+			'errors' => isset($validation) ? $validation['errors'] : $errors,
+			'hasErrors' => isset($validation) ? $hasErrors : !empty($errors),
 			'uploaded' => $uploaded,
 			'active' => 0
 		));
