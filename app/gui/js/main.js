@@ -1,4 +1,3 @@
-// Highlight function using vanilla JS
 function highlight(elemId) {
 	if (!elemId) return;
 	const elem = document.querySelector(elemId);

@@ -158,7 +158,7 @@ class controller
 					'language' => $language
 				);
 			}
-			if (!empty($id) and $value !== '' and $key !== '') {
+			if (!empty($id) and $key !== '') {
 				translations::update($id, array(
 					'key' => $key,
 					'value' => $value
@@ -658,29 +658,30 @@ class controller
 
 		//now we loop through all keypaths and check against the language count
 		$missing = array();
+
+		// Check for missing and empty translations in one pass
 		foreach ($data as $k => $entrylang) {
-			if (count($entrylang) < count($langs)) {
-				//there is one or more translations missing so we add them to the missings
+			$missingLanguages = array();
+			
+			foreach ($langs as $lang) {
+				// Check if language is missing or has empty value
+				if (empty($entrylang[$lang]) || $entrylang[$lang]['value'] === '') {
+					$missingLanguages[] = $lang;
+				}
+			}
+			
+			// If we found missing or empty languages, add to missing array
+			if (!empty($missingLanguages)) {
 				$entry = reset($entrylang);
-				$miss = array(
+				$missing[] = array(
 					'key' => $entry["key"],
 					'folder_id' => $entry['parent_id'],
 					'folder_name' => $keymap[$entry['parent_id']],
 					'row_id' => $entry['id'],
-					'languages' => array()
+					'languages' => $missingLanguages
 				);
-
-				//add every missing language to the entry
-				foreach ($langs as $lang) {
-					if (empty($entrylang[$lang])) {
-						$miss['languages'][] = $lang;
-					}
-				}
-
-				//finally add this to the missing array
-				$missing[] = $miss;
 			}
-		}
+		} 
 
 		self::render('nottranslated', array(
 			'keys' => $missing
