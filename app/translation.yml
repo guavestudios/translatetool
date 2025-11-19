@@ -1,0 +1,14 @@
+Glossary:
+    missing-one: 'there is one missing tadaa'
+Pages:
+    Page_1:
+        a-new-one: '<textarea name="value[]" id="" class="value"><?= $row ? htmlspecialchars($row[''value'']) : '''' ?></textarea><textarea name="value[]" id="" class="value">'
+        html-test: 'Hallo Yannick Danke für die Anpassungen. Kannst du uns noch ein Beispiel für das Array für "MinistryTypesTranslations" zusenden? Besten Dank Giusi'
+        eins-drei: 'One One'
+        eins-drei-eins-drei: 'One One Drei'
+        special_characters: 'Special characters: äöüßÄÖÜ éèêàáâçôùûîï'
+        continent: 'continent new'
+        testtest: english
+        country: land
+        blablabla: 'test test jajajajaa'
+        khjgjg: 'test test jajajajaa'

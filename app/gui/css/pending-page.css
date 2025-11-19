@@ -1,0 +1,73 @@
+.folder-header {
+	grid-column: 1 / -1;
+	font-size: var(--font-lg);
+	font-weight: bold;
+	margin-top: var(--spacing-lg);
+	margin-bottom: var(--spacing-sm);
+}
+
+.folder-header:first-of-type {
+	margin-top: var(--spacing-md);
+}
+
+
+.keys-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	column-gap: var(--spacing-sm);
+}
+
+.keys-grid--search {
+	grid-template-columns: 2fr 1fr 2fr;
+}
+
+.keys-grid-header {
+	display: grid;
+	grid-template-columns: subgrid;
+	grid-column: 1 / -1;
+	font-weight: bold;
+	padding: var(--spacing-sm) 0;
+	border-bottom: 1px solid var(--c-border);
+}
+
+.keys-grid-header div:first-child {
+	width: auto;
+}
+
+.keys-grid-row {
+	display: grid;
+	grid-template-columns: subgrid;
+	grid-column: 1 / -1;
+	padding: var(--spacing-md) var(--spacing-sm);
+	border-bottom: 1px solid var(--c-base-light);
+	text-decoration: none;
+	color: inherit;
+	transition: background 0.2s ease;
+	cursor: pointer;
+	position: relative;
+}
+
+.keys-grid-row .key-name {
+	position: relative;
+}
+
+.keys-grid-row .key-name::after {
+	content: 'Edit key';
+	position: absolute;
+	right: var(--spacing-md);
+	font-size: var(--font-sm);
+	color: var(--c-text-light);
+	translate: 50%;
+	opacity: 0;
+	transition: opacity 0.2s ease, translate 0.2s ease;
+}
+
+.keys-grid-row:hover {
+	background: var(--c-base-light);
+	text-decoration: none;
+}
+
+.keys-grid-row:hover .key-name::after {
+	translate: 0;
+	opacity: 1;
+}

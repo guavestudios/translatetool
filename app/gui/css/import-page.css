@@ -5,10 +5,11 @@
     margin-bottom: var(--spacing-lg);
 }
 
+h1 {
+    margin-bottom: var(--spacing-lg);
+}
+
 .import-container {
-    h1 {
-        margin-bottom: var(--spacing-lg);
-    }
 }
 
 .import-preview-grid {

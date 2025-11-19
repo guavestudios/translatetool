@@ -1,0 +1,167 @@
+@import 'https://fast.fonts.net/t/1.css?apiType=css&projectid=21e2d220-4a47-47b9-84df-3289bbc622b0';
+
+:root {
+	/* // FONT SIZES */
+	--font-sm: 0.85rem;
+	--font-md: 1rem;
+	--font-lg: 1.25rem;
+	--font-xl: 1.5rem;
+	--font-2xl: 2rem;
+	--font-3xl: 3rem;
+
+	/* COLOR VARIABLES */
+	--c-text: rgb(220, 220, 220);
+	--c-text-light: rgb(150, 150, 160);
+	--c-text-inverse: rgb(44, 44, 44);
+	--c-primary: #a4c92c;
+
+	--c-base: rgb(44, 44, 44);
+	/* No direct CSS variable for hsl(from ...) math, so use static values or preprocess */
+	--c-base-dark: #232323;
+	--c-base-light: #4A4A4A;
+	--c-border: rgb(110, 110, 115);
+
+	--c-error: rgb(160, 0, 0);
+
+	--spacing-2xs: 0.125rem;
+	--spacing-xs: 0.25rem;
+	--spacing-sm: 0.5rem;
+	--spacing-md: 1rem;
+	--spacing-lg: 1.5rem;
+	--spacing-xl: 2rem;
+	--spacing-2xl: 3rem;
+	--spacing-3xl: 4rem;
+
+	--border-radius: 0.25rem;
+	--border-radius-lg: 0.5rem;
+	--border-radius-xl: 1rem;
+}
+
+
+@font-face {
+	font-family: 'Avenir Next Guave';
+	font-weight: 400;
+	src: url('../fonts/c4691e94-080d-4452-8f9f-8b3db6b68d55.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Avenir Next Guave';
+	font-weight: 500;
+	src: url('../fonts/6afe4676-059a-4aa8-b891-29856bbcba22.woff2') format('woff2');
+}
+
+html {
+	interpolate-size: allow-keywords;
+}
+
+body {
+	font-family: 'Avenir Next Guave', 'Arial', 'PT Sans', sans-serif;
+	margin: 0;
+	padding: 0;
+	background: var(--c-base);
+	color: var(--c-text);
+}
+
+h1,
+h2 {
+	padding: 0;
+	margin: 0;
+}
+
+@view-transition {
+	navigation: auto
+}
+
+a {
+	text-decoration: none;
+	color: currentColor;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+input[type=text],
+input[type=password],
+textarea {
+	padding: var(--spacing-sm);
+	background: var(--c-base-light);
+	border: 1px solid var(--c-border);
+	font: inherit;
+	color: currentColor;
+	border-radius: var(--border-radius);
+	width: 100%;
+
+	&::placeholder {
+		color: var(--c-text)
+	}
+
+	&:focus,
+	&:hover {
+		outline: 2px solid var(--c-border);
+	}
+}
+
+.btn {
+	border: none;
+	font: inherit;
+	color: currentColor;
+	background: var(--c-base-light);
+	border-radius: var(--border-radius);
+	display: inline-flex;
+	gap: var(--spacing-xs);
+	align-items: center;
+	font-size: var(--font-md);
+	padding: var(--spacing-sm) var(--spacing-md);
+	cursor: pointer;
+
+	&:hover {
+		text-decoration: none;
+	}
+
+	&:disabled {
+		background: var(--c-base-dark);
+		color: var(--c-text-light);
+		cursor: not-allowed;
+	}
+}
+
+.btn--primary {
+	background: var(--c-primary);
+	color: var(--c-text-inverse);
+}
+
+.btn--error {
+	background: var(--c-error);
+}
+
+
+input svg,
+button svg {
+	width: 1em;
+	height: 1em;
+}
+
+.custom-checkbox {
+	height: 16px;
+	width: 16px;
+	appearance: none;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	margin-right: var(--spacing-sm);
+	border: 2px solid var(--c-primary);
+	border-radius: 999px;
+	background: var(--c-base-light);
+    display: none;
+
+	/* increase clickable area */
+	&:before {
+		content: '';
+		position: absolute;
+		inset: 0;
+	}
+
+	&:checked {
+		background: var(--c-primary);
+	}
+}

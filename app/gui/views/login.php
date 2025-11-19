@@ -13,7 +13,7 @@
 					<form action="" method="post">
 						<input type="text" name="username" placeholder="Benutzername">
 						<input type="password" name="passwd" placeholder="Passwort">
-						<input type="submit" value="Anmelden">
+						<input type="submit" value="Anmelden" class="btn btn--primary">
 					</form>
 				</div>
 			</div>
