@@ -87,13 +87,15 @@ textarea {
 	padding: var(--spacing-sm);
 	background: var(--c-base-light);
 	border: 1px solid var(--c-border);
-	font: inherit;
 	color: currentColor;
+	font-size: inherit;
+	font-family: inherit;
 	border-radius: var(--border-radius);
 	width: 100%;
 
 	&::placeholder {
-		color: var(--c-text)
+		color: var(--c-text-light);
+		font-weight: normal;
 	}
 
 	&:focus,
