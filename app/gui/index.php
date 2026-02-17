@@ -99,7 +99,7 @@ class controller
 				self::recursiveDelete($item['id']);
 			}
 		}
-		translations::deleteRow($delId);
+		translations::deleteById($delId);
 	}
 
 	public static function showAddFolder($parentId)

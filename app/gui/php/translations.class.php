@@ -72,6 +72,14 @@ class translations
 		}
 	}
 
+	public static function deleteById($id)
+	{
+		if (!is_numeric($id)) {
+			throw new Exception("ID is not numeric (given: '{$id}')");
+		}
+		self::qry("DELETE FROM " . self::$translationTable . " WHERE id = " . (int) $id);
+	}
+
 	public static function insertId()
 	{
 		return self::getSql()->lastInsertRowid();
@@ -80,14 +88,10 @@ class translations
 	/**
 	 * Gets data from the SQLite-DB.
 	 *
-	 * @param		array   $array   		Array containing all the columns from which the data should
-	 *                           		be retrieved (basically, it indicates the params for the SELECT-
-	 *                            	clause in the SQL-Statement). Defaults to * if empty.
-	 * @param		array   $orderBy		Array, containing the params for the ORDER BY-Clause.
-	 * @return	string  $where			String, containing all the WHERE-params for the SQL-Clause
-	 *                          		eg. "language='de'".
-	 *                           		Defaults to null, so no conditions are passed.
-	 * @return	array								An array containing each row of the resulting query.
+	 * @param array $array Array containing all selected columns. Defaults to `*` if empty.
+	 * @param array $orderBy Array containing ORDER BY fields.
+	 * @param string|null $where WHERE clause content, e.g. "language='de'" (without `WHERE`).
+	 * @return array An array containing each row of the resulting query.
 	 */
 	public static function get($array = array(), $orderBy = array(), $where = null)
 	{
