@@ -204,7 +204,10 @@
 	.collapsible-content {
 		height: 0;
 		overflow: hidden;
-		transition: height 0.3s ease;
+		transition-property: height, overflow;
+		transition-duration: 0.3s;
+		transition-timing-function: ease;
+		transition-behavior: allow-discrete;
 		grid-column: 1 / -1;
 		display: grid;
 		grid-template-columns: subgrid;
@@ -213,6 +216,7 @@
 	&.open {
 		.collapsible-content {
 			height: auto;
+			overflow: visible;
 		}
 
 		.trans-item {

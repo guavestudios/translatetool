@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>LanGuave - Login</title>
+		<title>LanGuave Tool - Login</title>
 		<base href="//<?= $_SERVER['HTTP_HOST'].config::get('base') ?>">
 		<link href="gui/css/styles.css" rel="stylesheet" type="text/css">
 	</head>
 	<body>
 		<div id="wrapper" class="centered">
 			<div class="login-popup">
-				<h1>Login</h1>
+				<h1>Login to Languave</h1>
 				<div class="text">
 					<form action="" method="post">
 						<input type="text" name="username" placeholder="Benutzername">

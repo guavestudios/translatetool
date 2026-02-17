@@ -1,6 +1,4 @@
 .treeInner {
-	overflow: auto;
-
 	a {
 		display: inline-block;
 		margin-bottom: var(--spacing-xs);
@@ -9,12 +7,16 @@
 	ul {
 		list-style-type: none;
 		padding: 0;
-		margin-left: var(--spacing-lg);
 	}
 }
 
 
 .tree-folder {
+
+	.tree-folder {
+		margin-left: var(--spacing-lg);
+	}
+
 	a {
 		position: relative;
 	}

@@ -2,7 +2,7 @@
 <html>
 
 <head>
-	<title>LanGuave</title>
+	<title>LanGuave Tool</title>
 	<meta charset="utf-8">
 	<base href="//<?= $_SERVER['HTTP_HOST'] . config::get('base') ?>">
 	<link href="gui/css/styles.css" rel="stylesheet" type="text/css">
@@ -16,7 +16,7 @@
 <body>
 	<div id="wrapper">
 		<header class="page-header">
-			<h1>LanGuave</h1>
+			<h1>LanGuave Tool</h1>			
 			<div class="page-header__actions">
 				<a href="nottranslated">pending translations</a>
 				<?php if (config::get('export_download')): ?>
@@ -37,7 +37,7 @@
 		</header>
 		<main class="main-container">
 			<aside class="tree">
-				<a href="overview">Bundle erstellen</a>
+				<a href="overview" class="btn btn--secondary">Bundle erstellen</a>
 				<div class="treeInner">
 					<?php echo translations::getTreeHtml(@$active); ?>
 				</div>
