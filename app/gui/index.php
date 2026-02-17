@@ -42,6 +42,7 @@ Flight::route('/del/folder/@delId', array('controller', 'delFolder'));
 
 Flight::route('/export', array('controller', 'export'));
 Flight::route('/download', array('controller', 'downloadCSV'));
+Flight::route('POST /delete/multikeys', array('controller', 'deleteMultiKeys'));
 Flight::route('/delete/@keyId/@active', array('controller', 'deleteKey'));
 
 Flight::route('/poll', array('controller', 'poll'));
@@ -117,6 +118,30 @@ class controller
 		self::mirror();
 		translations::deleteRow($keyId);
 		self::redirect('key/' . $active);
+	}
+
+	public static function deleteMultiKeys()
+	{
+		self::mirror();
+		$keyIds = isset($_POST['keyIds']) ? $_POST['keyIds'] : array();
+		if (!is_array($keyIds)) {
+			$keyIds = array();
+		}
+
+		$sanitizedIds = array();
+		foreach ($keyIds as $id) {
+			if (is_numeric($id)) {
+				$sanitizedIds[] = (int) $id;
+			}
+		}
+
+		$sanitizedIds = array_values(array_unique($sanitizedIds));
+		if (!empty($sanitizedIds)) {
+			translations::deleteRows($sanitizedIds);
+		}
+
+		header('Content-Type: application/json');
+		echo json_encode(array('status' => true));
 	}
 
 	public static function key($keyId)
