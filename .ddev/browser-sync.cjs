@@ -10,17 +10,12 @@ if (filesdir === "") {
 
 module.exports = {
 
-    files: [
-        "app/**/*.php",
-        "app/**/*.css", 
-        "app/**/*.js",
-        "app/**/*.html",
-        "debug.php"
-    ],
+    files: [docroot, "app", "resources/views/**/*.php"],
     ignore: ["node_modules", filesdir, "vendor"],
     open: false,
     ui: false,
     server: false,
+    notify: false,
     proxy: {
         target: nonSslUrl
     },
