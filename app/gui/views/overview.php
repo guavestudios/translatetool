@@ -71,8 +71,6 @@
 		</div>
 	</form>
 <?php else: ?>
-	Bitte wähle einen Key aus der linken Spalte.<br>
-	<br>
 	<form action="add/folder/" method="post">
 		<h1>Bundle erstellen</h1>
 		<input type="text" name="foldername" placeholder="Name">

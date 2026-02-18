@@ -1,10 +1,8 @@
 #wrapper {
 	margin: 0 auto;
-	/* max-width: 70rem; */
 	min-height: 100svh;
 	display: grid;
 	grid-template-rows: auto 1fr;
-	padding-inline: var(--spacing-md);
 }
 
 #wrapper.centered {
@@ -18,11 +16,16 @@
 	align-items: center;
 	justify-content: space-between;
 	flex-wrap: wrap;
+	background: var(--c-base-dark);
+	margin: var(--spacing-md);
+	border-radius: var(--border-radius);
+	padding: var(--spacing-sm) var(--spacing-md);
 
 	h1 {
 		font-size: var(--font-xl);
 		font-weight: bold;
 		padding: var(--spacing-md) 0;
+		margin: 0;
 	}
 }
 
@@ -36,9 +39,11 @@
 .main-container {
 	display: grid;
 	grid-template-columns: 250px 1fr;
-	gap: var(--spacing-lg);
+	gap: var(--spacing-md);
 	padding-bottom: var(--spacing-lg);
 	align-items: start;
+	margin-inline: var(--spacing-md);
+
 
 	aside {
 		padding-block: var(--spacing-md);
@@ -50,12 +55,18 @@
 	}
 }
 
-.login-popup {
-	width: 320px;
-	margin: 0 auto;
-	background: var(--c-base-light);
+.list-container {
+	background: var(--c-base-dark);
 	border-radius: var(--border-radius);
 	padding: var(--spacing-md);
+}
+
+.login-popup {
+	width: 32rem;
+	margin: 0 auto;
+	background: var(--c-base-dark);
+	border-radius: var(--border-radius);
+	padding: var(--spacing-xl);
 
 	form {
 		margin-top: var(--spacing-lg);

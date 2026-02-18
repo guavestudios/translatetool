@@ -37,11 +37,10 @@
 }
 
 .add-key-section {
-	margin-bottom: var(--spacing-lg);
 	position: sticky;
 	top: 0;
 	grid-column: 1/-1;
-	background: var(--c-base);
+	background: inherit;
 	z-index: 100;
 	display: grid;
 	grid-template-columns: subgrid;
