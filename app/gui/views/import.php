@@ -46,28 +46,32 @@
 		<!-- Format Documentation -->
 
 		<section class="card">
-			<h2>Format</h2>
-			<p>The CSV file should be formatted as follows:</p>
-			<h3>Table</h3>
-			<table width="50%" border="1">
-				<tr>
-					<td>key</td>
-					<?php foreach (config::get('languages') as $language): ?>
-						<td><?= htmlspecialchars($language) ?> (optional)</td>
-					<?php endforeach; ?>
-				</tr>
-				<tr>
-					<td>dot.delimited.key</td>
-					<?php foreach (config::get('languages') as $language): ?>
-						<td><?= htmlspecialchars(strtoupper($language)) ?> string</td>
-					<?php endforeach; ?>
-				</tr>
-			</table>
+			<div class="card__content">
+				<h2>Format</h2>
+				<p>The CSV file should be formatted as follows:</p>
+				<h3>Table</h3>
+				<table width="50%" border="1">
+					<tr>
+						<td>key</td>
+						<?php foreach (config::get('languages') as $language): ?>
+							<td><?= htmlspecialchars($language) ?> (optional)</td>
+						<?php endforeach; ?>
+					</tr>
+					<tr>
+						<td>dot.delimited.key</td>
+						<?php foreach (config::get('languages') as $language): ?>
+							<td><?= htmlspecialchars(strtoupper($language)) ?> string</td>
+						<?php endforeach; ?>
+					</tr>
+				</table>
+			</div>
+			<div class="card__content">
+				<h3>Plain Text</h3>
+				<p style="font-family: monospace;">"key"<?php foreach (config::get('languages') as $language): ?>;"<?= htmlspecialchars($language) ?> (optional)"<?php endforeach; ?> <br>
 
-			<h3>Plain Text</h3>
-			<p style="font-family: monospace;">"key"<?php foreach (config::get('languages') as $language): ?>;"<?= htmlspecialchars($language) ?> (optional)"<?php endforeach; ?> <br>
+					"dot.delimited.key"<?php foreach (config::get('languages') as $language): ?>;"<?= htmlspecialchars(strtoupper($language)) ?> string"<?php endforeach; ?></p>
+			</div>
 
-				"dot.delimited.key"<?php foreach (config::get('languages') as $language): ?>;"<?= htmlspecialchars(strtoupper($language)) ?> string"<?php endforeach; ?></p>
 		</section>
 
 	<?php elseif (!$hasErrors): ?>

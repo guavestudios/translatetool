@@ -1,77 +1,88 @@
 .treeInner {
-	a {
-		display: inline-block;
-		margin-bottom: var(--spacing-xs);
-	}
+  margin-bottom: var(--spacing-md);
 
-	ul {
-		list-style-type: none;
-		padding: 0;
-	}
+  a {
+    display: inline-block;
+  }
+
+  ul {
+    list-style-type: none;
+  }
 }
 
-
 .tree-folder {
+  .tree-folder {
+    margin-left: var(--spacing-lg);
+  }
 
-	.tree-folder {
-		margin-left: var(--spacing-lg);
-	}
+  .row {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-left: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+
+    &:hover a + .tree-folder-actions {
+      opacity: 1;
+      translate: 0;
+      pointer-events: auto;
+    }
+  }
+
+  .row:has(.active) {
+    color: var(--c-text-inverse);
 
 	a {
-		position: relative;
-	}
+		view-transition-name: match-element;
+	};
 
-	a.active:before {
-		content: '';
-		position: absolute;
-		left: -1.4em;
-		top: 50%;
-		transform: translateY(-50%);
-		width: 1em;
-		height: 1em;
-		border-radius: 50%;
-		background: var(--c-primary);
-		view-transition-name: list-dot;
-	}
+    &:after {
+      content: "";
+      position: absolute;
+      right: 0;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      border-radius: var(--border-radius);
+      background: var(--c-primary);
+      view-transition-name: list-dot;
+      z-index: -1;
+    }
+  }
+}
 
-	.row {
-		display: flex;
-		align-items: center;
-
-		&:hover a+.tree-folder-actions {
-			opacity: 1;
-			translate: 0;
-			pointer-events: auto;
-		}
-	}
+::view-transition-group(list-dot) {
+  animation-duration: 0,1s;
 }
 
 .tree-folder-actions {
-	display: inline-flex;
-	gap: var(--spacing-xs);
-	margin-left: var(--spacing-md);
-	opacity: 0;
-	pointer-events: none;
-	translate: -6px;
-	transition: opacity 0.2s ease, translate 0.2s ease;
+  display: inline-flex;
+  gap: var(--spacing-xs);
+  margin-left: var(--spacing-md);
+  opacity: 0;
+  pointer-events: none;
+  translate: -6px;
+  transition:
+    opacity 0.2s ease,
+    translate 0.2s ease;
 
-	a {
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 24px;
-		height: 24px;
-		transition: background 0.2s;
+  a {
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    transition: background 0.2s;
 
-		&:hover {
-			background: var(--c-primary);
-			color: var(--c-text-inverse);
-		}
-	}
+    &:hover {
+      background: var(--c-primary);
+      color: var(--c-text-inverse);
+    }
+  }
 
-	svg {
-		width: 18px;
-		height: 18px;
-	}
+  svg {
+    width: 18px;
+    height: 18px;
+  }
 }

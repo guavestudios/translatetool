@@ -1,9 +1,10 @@
 #wrapper {
 	margin: 0 auto;
-	max-width: 70rem;
+	/* max-width: 70rem; */
 	min-height: 100svh;
 	display: grid;
 	grid-template-rows: auto 1fr;
+	padding-inline: var(--spacing-md);
 }
 
 #wrapper.centered {
@@ -21,7 +22,6 @@
 	h1 {
 		font-size: var(--font-xl);
 		font-weight: bold;
-		margin: 0;
 		padding: var(--spacing-md) 0;
 	}
 }
@@ -38,12 +38,15 @@
 	grid-template-columns: 250px 1fr;
 	gap: var(--spacing-lg);
 	padding-bottom: var(--spacing-lg);
+	align-items: start;
 
 	aside {
-		padding: var(--spacing-md);
-		padding-left: var(--spacing-xl);
+		padding-block: var(--spacing-md);
+		padding-inline: var(--spacing-md);
 		background: var(--c-base-dark);
 		border-radius: var(--border-radius);
+		position: sticky;
+		top: var(--spacing-md);
 	}
 }
 

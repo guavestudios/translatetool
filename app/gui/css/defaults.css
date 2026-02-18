@@ -50,26 +50,33 @@
 	src: url('../fonts/6afe4676-059a-4aa8-b891-29856bbcba22.woff2') format('woff2');
 }
 
+/* resets */
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
 html {
 	interpolate-size: allow-keywords;
 }
 
 body {
 	font-family: 'Avenir Next Guave', 'Arial', 'PT Sans', sans-serif;
-	margin: 0;
-	padding: 0;
 	background: var(--c-base);
 	color: var(--c-text);
-}
-
-h1,
-h2 {
-	padding: 0;
-	margin: 0;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	font-smoothing: antialiased;
 }
 
 @view-transition {
 	navigation: auto
+}
+
+::view-transition-group(root) {
+	animation-duration: 0.2s;
 }
 
 a {
@@ -83,6 +90,7 @@ a:hover {
 
 input[type=text],
 input[type=password],
+select,
 textarea {
 	padding: var(--spacing-sm);
 	background: var(--c-base-light);
@@ -113,6 +121,7 @@ textarea {
 	display: inline-flex;
 	gap: var(--spacing-xs);
 	align-items: center;
+	justify-content: center;
 	font-size: var(--font-md);
 	padding: var(--spacing-sm) var(--spacing-md);
 	cursor: pointer;
@@ -135,6 +144,10 @@ textarea {
 
 .btn--error {
 	background: var(--c-error);
+}
+
+.btn--block {
+	width: 100%;
 }
 
 

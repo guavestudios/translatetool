@@ -37,10 +37,10 @@
 		</header>
 		<main class="main-container">
 			<aside class="tree">
-				<a href="overview" class="btn btn--secondary">Bundle erstellen</a>
 				<div class="treeInner">
 					<?php echo translations::getTreeHtml(@$active); ?>
 				</div>
+				<a href="overview" class="btn btn--secondary btn--block">Bundle erstellen <i class="ph ph-plus"></i></a>
 			</aside>
 			<div class="list-container">
 				<?= $body_content ?>

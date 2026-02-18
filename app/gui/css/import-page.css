@@ -5,9 +5,14 @@
     margin-bottom: var(--spacing-lg);
 }
 
-h1 {
+.card__content {
     margin-bottom: var(--spacing-lg);
+
+    h2, h3 {
+        margin-bottom: var(--spacing-md);
+    }
 }
+
 
 .import-container {
 }
@@ -38,10 +43,6 @@ h1 {
 
         &:nth-of-type(2) {
             margin-top: 0;
-        }
-
-        h4 {
-            margin: 0;
         }
     }
 
