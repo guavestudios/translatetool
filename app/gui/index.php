@@ -76,13 +76,25 @@ class controller
 	public static function editFolder()
 	{
 		self::mirror();
+		$editId = isset($_POST['edit_id']) ? (int) $_POST['edit_id'] : (int) $_POST['parent_id'];
+		$newParentId = isset($_POST['parent_id']) ? (int) $_POST['parent_id'] : 0;
+
+		$availableParents = self::getAvailableFolderParents($editId);
+		$allowedParentIds = array_map(function ($parent) {
+			return (int) $parent['id'];
+		}, $availableParents);
+		if (!in_array($newParentId, $allowedParentIds, true)) {
+			$newParentId = 0;
+		}
+
 		translations::update(
-			$_POST['parent_id'],
+			$editId,
 			array(
-				'key' => $_POST['foldername']
+				'key' => $_POST['foldername'],
+				'parent_id' => $newParentId
 			)
 		);
-		self::redirect('key/' . $_POST['parent_id']);
+		self::redirect('key/' . $editId);
 	}
 
 	public static function delFolder($delId)
@@ -104,13 +116,22 @@ class controller
 
 	public static function showAddFolder($parentId)
 	{
-		self::render('editfolder', array('active' => $parentId));
+		self::render('editfolder', array(
+			'active' => $parentId,
+			'selected_parent_id' => (int) $parentId,
+			'parent_options' => self::getAvailableFolderParents()
+		));
 	}
 
 	public static function showEditFolder($editId)
 	{
 		$folder = translations::getOne($editId);
-		self::render('editfolder', array('active' => $editId, 'folder' => $folder));
+		self::render('editfolder', array(
+			'active' => $editId,
+			'folder' => $folder,
+			'selected_parent_id' => isset($folder['parent_id']) ? (int) $folder['parent_id'] : 0,
+			'parent_options' => self::getAvailableFolderParents((int) $editId)
+		));
 	}
 
 	public static function deleteKey($keyId, $active)
@@ -740,6 +761,67 @@ class controller
 				$output[$entry["id"]] = $key;
 			}
 		}
+	}
+
+	private static function getAvailableFolderParents($excludeFolderId = null)
+	{
+		$where = "value IS NULL AND language IS NULL";
+		$folders = translations::get(array('id', 'key', 'parent_id'), array('key'), $where);
+
+		$childrenByParent = array();
+		foreach ($folders as $folder) {
+			$parentId = (int) $folder['parent_id'];
+			if (!isset($childrenByParent[$parentId])) {
+				$childrenByParent[$parentId] = array();
+			}
+			$childrenByParent[$parentId][] = $folder;
+		}
+
+		$excludedIds = array();
+		if ($excludeFolderId !== null) {
+			$excludeFolderId = (int) $excludeFolderId;
+			$excludedIds[] = $excludeFolderId;
+			$excludedIds = array_merge($excludedIds, self::getDescendantFolderIds($excludeFolderId, $childrenByParent));
+		}
+
+		$options = array(
+			array('id' => 0, 'label' => 'Root')
+		);
+		self::appendFolderParentOptions($options, $childrenByParent, 0, '', $excludedIds);
+		return $options;
+	}
+
+	private static function appendFolderParentOptions(&$options, $childrenByParent, $parentId, $prefix, $excludedIds)
+	{
+		if (!isset($childrenByParent[$parentId])) {
+			return;
+		}
+
+		foreach ($childrenByParent[$parentId] as $folder) {
+			$currentId = (int) $folder['id'];
+			if (in_array($currentId, $excludedIds, true)) {
+				continue;
+			}
+			$label = ($prefix === '') ? $folder['key'] : $prefix . '.' . $folder['key'];
+			$options[] = array('id' => $currentId, 'label' => $label);
+			self::appendFolderParentOptions($options, $childrenByParent, $currentId, $label, $excludedIds);
+		}
+	}
+
+	private static function getDescendantFolderIds($folderId, $childrenByParent)
+	{
+		$descendants = array();
+		if (!isset($childrenByParent[$folderId])) {
+			return $descendants;
+		}
+
+		foreach ($childrenByParent[$folderId] as $child) {
+			$childId = (int) $child['id'];
+			$descendants[] = $childId;
+			$descendants = array_merge($descendants, self::getDescendantFolderIds($childId, $childrenByParent));
+		}
+
+		return $descendants;
 	}
 
 	private static function render($template, $vars = array())
