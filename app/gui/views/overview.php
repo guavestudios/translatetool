@@ -16,7 +16,6 @@
 									<span class="lang-row__name"><?= $language ?></span>
 									<input type="hidden" aria-hidden="true" name="language[]" value="<?= $language ?>">
 									<input type="hidden" aria-hidden="true" name="key[]" value="" class="key-input sync-key" placeholder="Key">
-									<!-- <input type="text" name="value[]" value="" class="value"> -->
 									<input type="hidden" aria-hidden="true" name="id[]" value=""> <!-- New key, no ID yet -->
 									<textarea name="value[]" id="" class="value"></textarea>
 								</div>
@@ -52,7 +51,6 @@
 								<span class="lang-row__name"><?= $language ?></span>
 								<input type="hidden" aria-hidden="true" name="language[]" value="<?= $language ?>">
 								<input type="hidden" aria-hidden="true" name="key[]" value="<?= $row ? $row['key'] : '' ?>" class="key-input sync-key" placeholder="Key" <?= $row && isset($row['id']) ? ' id="key-sync-' . $row['id'] . '-' . $language . '"' : '' ?>>
-								<!-- <input type="text" name="value[]" value="<?= $row ? htmlspecialchars($row['value']) : '' ?>" class="value"> -->
 								<input type="hidden" aria-hidden="true" name="id[]" value="<?= $row && isset($row['id']) ? $row['id'] : '' ?>">
 								<textarea name="value[]" id="" class="value"><?= $row ? htmlspecialchars($row['value']) : '' ?></textarea>
 							</div>
