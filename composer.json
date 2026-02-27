@@ -1,0 +1,6 @@
+{
+    "require": {
+        "flightphp/core": "^3.18",
+        "symfony/yaml": "^7.4"
+    }
+}

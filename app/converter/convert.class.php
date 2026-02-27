@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Guave\translatetool;
 
 class converter{
@@ -24,10 +26,10 @@ class converter{
 	}
 
 	public function write($filePath, $fileName, $adapterResponse){
-		file_put_contents($filePath.$fileName.'.'.$adapterResponse['meta']['extension'], \utf8_encode($adapterResponse['file']));
+		file_put_contents($filePath.$fileName.'.'.$adapterResponse['meta']['extension'], (string)$adapterResponse['file']);
 	}
 
-	public function getKeyFormated($adapter, $key){
+	public function getKeyFormated($adapter, $key, $value = null){
 		$adapterClass = $this->loadAdapter($adapter);
 		if(is_callable(array($adapterClass, 'outputKey'))){
 			return call_user_func_array(array($adapterClass, 'outputKey'), array($key));

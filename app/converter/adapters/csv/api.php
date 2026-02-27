@@ -3,7 +3,6 @@
 namespace Guave\translatetool;
 
 require_once(dirname(__FILE__) . '/../AbstractBaseAdapter.class.php');
-require_once(dirname(__FILE__) . '/parsecsv.lib.php');
 require_once(dirname(__FILE__) . '/../../../config.class.php');
 
 use Guave\translatetool\AbstractBaseAdapter as AbstractBaseAdapter;

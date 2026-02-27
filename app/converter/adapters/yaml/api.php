@@ -2,7 +2,7 @@
 
 namespace Guave\translatetool;
 
-require_once 'Yaml-master/vendor/autoload.php';
+require_once dirname(__FILE__, 5) . '/vendor/autoload.php';
 
 use Symfony\Component\Yaml\Yaml as YamlParser;
 
@@ -26,7 +26,7 @@ class yaml{
 		if(!file_exists($file)){
 			throw new \Exception("File {$file} not found");
 		}
-		$return = YamlParser::parse($file);
+		$return = YamlParser::parseFile($file);
 		return $return;
 	}
 	

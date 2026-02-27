@@ -157,8 +157,8 @@ class Validator
 		$commonPath = array();
 
 		// Ensure $oldPath and $newPath are arrays
-		$oldPathArray = is_array($oldPath) ? $oldPath : explode('.', $oldPath);
-		$newPathArray = is_array($newPath) ? $newPath : explode('.', $newPath);
+		$oldPathArray = is_array($oldPath) ? $oldPath : ($oldPath === null ? array() : explode('.', (string) $oldPath));
+		$newPathArray = is_array($newPath) ? $newPath : ($newPath === null ? array() : explode('.', (string) $newPath));
 
 		for ($i = 0; $i < count($oldPathArray); $i++) {
 			if (isset($oldPathArray[$i]) && isset($newPathArray[$i]) && $oldPathArray[$i] === $newPathArray[$i]) $commonPath[] = $oldPathArray[$i];

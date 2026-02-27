@@ -14,7 +14,7 @@ class config{
 
 	public static function setConfigPath($path) {
 		self::$cfgPath = $path;
-		$cfg = null;
+		self::$cfg = null;
 	}
 
 	private static function readConfig(){

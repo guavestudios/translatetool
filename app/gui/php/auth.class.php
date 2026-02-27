@@ -1,8 +1,11 @@
 <?php
 
-@session_start();
-
 class auth{
+	private static function ensureSessionStarted(){
+		if (session_status() !== PHP_SESSION_ACTIVE) {
+			session_start();
+		}
+	}
 
 	private static function validate($username, $passwd){
 		$users = config::get('users');
@@ -15,6 +18,7 @@ class auth{
 	}
 	
 	public static function login($username, $passwd){
+		self::ensureSessionStarted();
 		$roles = self::validate($username, $passwd);
 		if(!empty($roles)){
 			$_SESSION['auth']['loggedIn'] = true;
@@ -27,10 +31,12 @@ class auth{
 	}
 	
 	public static function logout(){
+		self::ensureSessionStarted();
 		unset($_SESSION['auth']);
 	}
 	
 	public static function ed(){
+		self::ensureSessionStarted();
 		if(isset($_SESSION['auth']['loggedIn']) and $_SESSION['auth']['loggedIn'] == true){
 			return true;
 		}else{
@@ -39,7 +45,11 @@ class auth{
 	}
 	
 	public static function has($role){
-		return in_array($role, $_SESSION['auth']['roles']);
+		self::ensureSessionStarted();
+		if (!isset($_SESSION['auth']['roles']) || !is_array($_SESSION['auth']['roles'])) {
+			return false;
+		}
+		return in_array($role, $_SESSION['auth']['roles'], true);
 	}
 	
 }
