@@ -19,6 +19,6 @@ class AuthController extends BaseController
 
 	public static function login()
 	{
-		self::render('login');
+		Flight::render('login');
 	}
 }
