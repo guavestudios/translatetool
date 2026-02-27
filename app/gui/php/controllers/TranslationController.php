@@ -117,38 +117,44 @@ class TranslationController extends BaseController
 	{
 		self::mirror();
 		$entries = array();
-		foreach ($_POST['key'] as $k => $key) {
-			$value = $_POST['value'][$k];
-			$id = $_POST['id'][$k];
-			$language = $_POST['language'][$k];
+		$groups = isset($_POST['groups']) && is_array($_POST['groups']) ? $_POST['groups'] : array();
+		$seen = array();
+		$languages = config::get('languages');
 
-			$duplicate = false;
-			for ($i = $k - 1; $i >= 0; $i--) {
-				if ($_POST['key'][$i] == $key && $_POST['language'][$i] == $language) {
-					$duplicate = true;
-					break;
+		foreach ($groups as $group) {
+			$key = isset($group['key']) ? trim((string) $group['key']) : '';
+			$rows = isset($group['rows']) && is_array($group['rows']) ? $group['rows'] : array();
+
+			foreach ($languages as $language) {
+				$row = isset($rows[$language]) && is_array($rows[$language]) ? $rows[$language] : array();
+				$id = isset($row['id']) ? trim((string) $row['id']) : '';
+				$value = isset($row['value']) ? (string) $row['value'] : '';
+
+				$duplicateKey = $key . '|' . $language;
+				if ($key !== '' && isset($seen[$duplicateKey])) {
+					continue;
 				}
-			}
-			if ($duplicate) {
-				continue;
-			}
+				if ($key !== '') {
+					$seen[$duplicateKey] = true;
+				}
 
-			if (empty($id) and $value == '' and $key == '') {
-				continue;
-			}
-			if (empty($id) and $value !== '' and $key !== '') {
-				$entries[] = array(
-					'parent_id' => $keyId,
-					'key' => $key,
-					'value' => $value,
-					'language' => $language
-				);
-			}
-			if (!empty($id) and $key !== '') {
-				translations::update($id, array(
-					'key' => $key,
-					'value' => $value
-				));
+				if ($id === '' && $value === '' && $key === '') {
+					continue;
+				}
+				if ($id === '' && $value !== '' && $key !== '') {
+					$entries[] = array(
+						'parent_id' => $keyId,
+						'key' => $key,
+						'value' => $value,
+						'language' => $language
+					);
+				}
+				if ($id !== '' && $key !== '' && is_numeric($id)) {
+					translations::update((int) $id, array(
+						'key' => $key,
+						'value' => $value
+					));
+				}
 			}
 		}
 		translations::append($entries);

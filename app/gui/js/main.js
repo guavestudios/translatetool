@@ -9,31 +9,20 @@ function highlight(elemId) {
 document.addEventListener('DOMContentLoaded', function () {
 	highlight(document.location.hash);
 
-	function syncMainWithSubInputs(mainInput, subInputs) {
-		if (!mainInput || !subInputs) return;
-		mainInput.addEventListener('input', function () {
-			subInputs.forEach(function (subInput) {
-				subInput.value = mainInput.value;
-			});
-		});
-		// Sync on page load
-		subInputs.forEach(function (subInput) {
-			subInput.value = mainInput.value;
-		});
+	function getRowId(container) {
+		if (!container) return '';
+		return container.getAttribute('data-row-id') || '';
 	}
 
-	// For each trans-item, sync only its own key inputs
 	document.querySelectorAll('.trans-item').forEach(function (container) {
 		const mainKeyInput = container.querySelector('.keyname-input-main');
-		const syncInputs = container.querySelectorAll('.sync-key');
-		syncMainWithSubInputs(mainKeyInput, syncInputs);
 		// JS delete link logic
 		const deleteLink = container.querySelector('.delete-key');
 		if (deleteLink) {
-			const row = container.querySelector('.lang-row input[name="id[]"]');
-			if (row && row.value) {
+			const rowId = getRowId(container);
+			if (rowId) {
 				const active = deleteLink.getAttribute('data-active');
-				deleteLink.href = `delete/${row.value}/${active}`;
+				deleteLink.href = `delete/${rowId}/${active}`;
 				deleteLink.onclick = function () {
 					const keyName = mainKeyInput ? mainKeyInput.value : '';
 					return confirm(`Wirklich löschen?\nKey: ${keyName}`);
@@ -201,6 +190,26 @@ document.addEventListener('DOMContentLoaded', function () {
 	// stage the current row and start the next one (submit still via Add Key / Cmd+S).
 	const addKeySection = document.querySelector('.add-key-section');
 	if (addKeySection) {
+		function assignGroupName(container, groupKey) {
+			container.setAttribute('data-group-key', groupKey);
+			const keyInput = container.querySelector('.keyname-input-main');
+			if (keyInput) {
+				keyInput.name = `groups[${groupKey}][key]`;
+			}
+			container.querySelectorAll('.lang-row').forEach(function (row) {
+				const language = row.querySelector('.lang-row__name')?.textContent?.trim();
+				if (!language) return;
+				const idInput = row.querySelector('.row-id-input');
+				const valueInput = row.querySelector('textarea.value');
+				if (idInput) {
+					idInput.name = `groups[${groupKey}][rows][${language}][id]`;
+				}
+				if (valueInput) {
+					valueInput.name = `groups[${groupKey}][rows][${language}][value]`;
+				}
+			});
+		}
+
 		addKeySection.addEventListener('keydown', function (e) {
 			if (e.key !== 'Enter') return;
 			if (e.target.matches('input[type="submit"], button')) return;

@@ -1,23 +1,22 @@
 <?php if (isset($keys)): ?>
 	<form action="" method="post" class="keyform">
 		<div class="inputvalues">
+			<?php $languages = config::get('languages'); ?>
 			<header class="add-key-section collapsible">
 				<div class="collapsible-header">
 					<i class="ph ph-caret-down"></i>add new key
 				</div>
 				<div class="collapsible-content">
-					<div class="trans-item trans-item--add-key">
+					<div class="trans-item trans-item--add-key" data-group-key="new_0">
 						<div class="key-wrapper">
-							<input type="text" name="keyname[]" value="" class="keyname-input-main" placeholder="Key Name" pattern="^\S+$" title="No spaces allowed">
+							<input type="text" name="groups[new_0][key]" value="" class="keyname-input-main" placeholder="Key Name" pattern="^\S+$" title="No spaces allowed">
 						</div>
 						<div class="values-container">
-							<?php foreach (config::get('languages') as $langIdx => $language): ?>
+							<?php foreach ($languages as $langIdx => $language): ?>
 								<div class="lang-row">
 									<span class="lang-row__name"><?= $language ?></span>
-									<input type="hidden" aria-hidden="true" name="language[]" value="<?= $language ?>">
-									<input type="hidden" aria-hidden="true" name="key[]" value="" class="key-input sync-key" placeholder="Key">
-									<input type="hidden" aria-hidden="true" name="id[]" value=""> <!-- New key, no ID yet -->
-									<textarea name="value[]" id="" class="value"></textarea>
+									<input type="hidden" aria-hidden="true" name="groups[new_0][rows][<?= htmlspecialchars($language) ?>][id]" value="" class="row-id-input">
+									<textarea name="groups[new_0][rows][<?= htmlspecialchars($language) ?>][value]" class="value"></textarea>
 								</div>
 							<?php endforeach; ?>
 						</div>
@@ -27,19 +26,30 @@
 					</div>
 				</div>
 			</header>
-			<?php foreach ($keys as $k => $key): ?>
-				<div class="trans-item translation-key-group" id="k_<?= htmlspecialchars($key['keyName']) ?>">
+			<?php $groupIndexCounter = 0; ?>
+			<?php foreach ($keys as $groupKey => $key): ?>
+				<?php $groupIndex = $groupIndexCounter++; ?>
+				<?php
+				$firstRowId = '';
+				foreach ($languages as $language) {
+					if (isset($key[$language][0]['id'])) {
+						$firstRowId = (string) $key[$language][0]['id'];
+						break;
+					}
+				}
+				?>
+				<div class="trans-item translation-key-group" id="k_<?= htmlspecialchars($key['keyName']) ?>" data-row-id="<?= htmlspecialchars($firstRowId) ?>" data-group-key="<?= $groupIndex ?>">
 					<div class="key-wrapper">
 						<div class="checkbox-container">
 							<input type="checkbox" class="custom-checkbox">
 						</div>
-						<input type="text" name="keyname[]" value="<?= htmlspecialchars($key['keyName']) ?>" class="keyname-input-main" placeholder="Key Name" pattern="^\S+$" title="No spaces allowed">
+						<input type="text" name="groups[<?= $groupIndex ?>][key]" value="<?= htmlspecialchars($key['keyName']) ?>" class="keyname-input-main" placeholder="Key Name" pattern="^\S+$" title="No spaces allowed">
 						<a class="delete-key" data-active="<?= $active ?>">
 							<i class="delete-key ph ph-trash"></i>
 						</a>
 					</div>
 					<div class="values-container">
-						<?php foreach (config::get('languages') as $langIdx => $language): ?>
+						<?php foreach ($languages as $langIdx => $language): ?>
 							<?php
 							// Find the first row for this language, if any
 							$row = null;
@@ -49,10 +59,8 @@
 							?>
 							<div class="lang-row" <?= $row && isset($row['id']) ? ' id="row_' . $row['id'] . '"' : '' ?>>
 								<span class="lang-row__name"><?= $language ?></span>
-								<input type="hidden" aria-hidden="true" name="language[]" value="<?= $language ?>">
-								<input type="hidden" aria-hidden="true" name="key[]" value="<?= $row ? $row['key'] : '' ?>" class="key-input sync-key" placeholder="Key" <?= $row && isset($row['id']) ? ' id="key-sync-' . $row['id'] . '-' . $language . '"' : '' ?>>
-								<input type="hidden" aria-hidden="true" name="id[]" value="<?= $row && isset($row['id']) ? $row['id'] : '' ?>">
-								<textarea name="value[]" id="" class="value"><?= $row ? htmlspecialchars($row['value']) : '' ?></textarea>
+								<input type="hidden" aria-hidden="true" name="groups[<?= $groupIndex ?>][rows][<?= htmlspecialchars($language) ?>][id]" value="<?= $row && isset($row['id']) ? $row['id'] : '' ?>" class="row-id-input">
+								<textarea name="groups[<?= $groupIndex ?>][rows][<?= htmlspecialchars($language) ?>][value]" class="value"><?= $row ? htmlspecialchars($row['value']) : '' ?></textarea>
 							</div>
 						<?php endforeach; ?>
 					</div>
