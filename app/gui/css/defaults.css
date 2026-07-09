@@ -175,6 +175,7 @@ button svg {
 	border: 2px solid var(--c-primary);
 	border-radius: 999px;
 	background: var(--c-base-light);
+	position: relative;
 
 	/* increase clickable area */
 	&:before {
