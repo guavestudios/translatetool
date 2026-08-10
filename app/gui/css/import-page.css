@@ -1,3 +1,28 @@
+.validation-warnings {
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md) 0;
+    border-left: 4px solid darkorange;
+    background: var(--c-base-dark);
+
+    h3 {
+        margin-top: 0;
+        color: darkorange;
+    }
+
+    .warning-group {
+        margin-top: var(--spacing-md);
+
+        h4 {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        ul {
+            margin: 0;
+            padding-left: var(--spacing-lg);
+        }
+    }
+}
+
 .card {
     background: var(--c-base-dark);
     padding: var(--spacing-md);

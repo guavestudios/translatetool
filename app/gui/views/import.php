@@ -11,7 +11,6 @@
 				'duplicateErrors' => 'Duplicate Key',
 				'folderIsFileErrors' => 'Folder/File Conflict',
 				'invalidFormatErrors' => 'Invalid Key Format',
-				'emptyValueErrors' => 'Empty Value',
 				'inCsvNotInDbErrors' => 'Keys Not in Database'
 			);
 			?>
@@ -24,6 +23,34 @@
 						<ul>
 							<?php foreach ($errorList as $error): ?>
 								<li><?php echo htmlspecialchars($error); ?></li>
+							<?php endforeach; ?>
+						</ul>
+					</div>
+				<?php endif; ?>
+			<?php endforeach; ?>
+		</div>
+	<?php endif ?>
+
+	<?php if (!empty($hasWarnings) && !$hasErrors): ?>
+		<div class="validation-warnings">
+			<h3>Validation Warnings</h3>
+			<p>Empty translation cells will be skipped and will not overwrite existing values.</p>
+
+			<?php
+			$warningTypeNames = array(
+				'moreLangInConfigWarning' => 'Language Configuration',
+				'emptyValueWarning' => 'Empty Value'
+			);
+			?>
+			<?php foreach ($warnings as $warningType => $warningList): ?>
+				<?php if (!empty($warningList)): ?>
+					<div class="warning-group">
+						<h4>
+							<?php echo isset($warningTypeNames[$warningType]) ? $warningTypeNames[$warningType] : ucfirst($warningType); ?>
+						</h4>
+						<ul>
+							<?php foreach ($warningList as $warning): ?>
+								<li><?php echo htmlspecialchars($warning); ?></li>
 							<?php endforeach; ?>
 						</ul>
 					</div>

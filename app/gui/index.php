@@ -428,18 +428,15 @@ class controller
 		//Get all languages from the CSV
 		$csvLang = Validator::getLangsFromData($checkCsvData[0]);
 
-		//Prepare arrays to hold all warnings and critical errors
-		$warnings = array();
-		$critical = array();
-
-		//Separate containers for critical errors, so all errors of the same type
-		//are in one container.
+		//Separate containers for critical errors / warnings, so all messages of the
+		//same type are in one container.
 		$critMoreLang = array();
 		$critDuplicate = array();
 		$critFolder = array();
 		$critInvalidFormat = array();
-		$critEmptyVal = array();
 		$critInCsvNotInDb = array();
+		$warnMoreLangInConfig = array();
+		$warnEmptyVal = array();
 
 		//Check if there are the same languages in the csv as in the config defined,
 		//else an error-message is stored to the appropriate array.
@@ -468,7 +465,7 @@ class controller
 		// Loop through all entries/rows and test for
 		// * duplicates
 		// * invalid keynames
-		// * empty values
+		// * empty values (warning only; cells are skipped on import)
 		//
 		// $currentPath 	holds the path to the last csv-item
 		// $newPath				holds the path to the next/current csv-item
@@ -477,15 +474,13 @@ class controller
 			Validator::checkForDuplicates($row, $newPath, $currentPath, $checkCsvData, $critDuplicate);
 			$currentPath = Validator::checkForFolderIsFile($row, $newPath, $currentPath, $checkCsvData, $critFolder);
 			$invalidFormat[] = Validator::checkInvalidFormat($row, $critInvalidFormat);
-			Validator::checkEmptyValuesInData($configLang, $row, $critEmptyVal);
+			Validator::checkEmptyValuesInData($configLang, $row, $warnEmptyVal);
 			$csvKeys[] = $row['key'];
 		}
 
 		$dbDataIndexed = Validator::getIndexedDbData($dbData);
 		$dbKeys = Validator::getKeysInDb($dbDataIndexed);
 
-		//	Get all keys that are in the DB but are missing in the csv
-		Validator::checkInDbNotInData($dbKeys, $csvKeys, $warnInDbNotInCsv);
 		Validator::checkInDataNotInDb(true, $csvKeys, $dbKeys, $invalidFormat, $critInCsvNotInDb);
 
 		//Combine all critical errors in one array.
@@ -494,8 +489,12 @@ class controller
 			'duplicateErrors' => $critDuplicate,
 			'folderIsFileErrors' => $critFolder,
 			'invalidFormatErrors' => $critInvalidFormat,
-			'emptyValueErrors' => $critEmptyVal,
 			'inCsvNotInDbErrors' => $critInCsvNotInDb
+		);
+
+		$warnings = array(
+			'moreLangInConfigWarning' => $warnMoreLangInConfig,
+			'emptyValueWarning' => $warnEmptyVal
 		);
 
 		$valueComparison = Validator::compareCSVWithDatabase($csv, $dbDataIndexed);
@@ -530,7 +529,8 @@ class controller
 			}
 
 			foreach (config::get('languages') as $lang) {
-				if (isset($row[$lang])) {
+				// Skip empty cells so they do not overwrite existing translations
+				if (isset($row[$lang]) && $row[$lang] !== '') {
 					self::insertDotDelimitedKeyValue($row['key'], $row[$lang], $lang, true);
 				}
 			}
@@ -626,6 +626,7 @@ class controller
 
 			// Check if there are any errors across all categories
 			$hasErrors = self::countTwoDimensionalArray($validation['errors']) > 0;
+			$hasWarnings = self::countTwoDimensionalArray($validation['warnings']) > 0;
 
 			// Convert validation errors to simple error messages
 			$errors = array();
@@ -637,7 +638,7 @@ class controller
 				}
 			}
 
-			// Only store file if validation passes
+			// Only store file if validation passes (warnings do not block)
 			if (!$hasErrors) {
 				$_SESSION['pending_csv'] = $tempFile;
 			} else {
@@ -648,7 +649,9 @@ class controller
 		self::render('import', array(
 			'csvData' => isset($valueComparison) ? $valueComparison : array(),
 			'errors' => isset($validation) ? $validation['errors'] : $errors,
+			'warnings' => isset($validation) ? $validation['warnings'] : array(),
 			'hasErrors' => isset($validation) ? $hasErrors : !empty($errors),
+			'hasWarnings' => isset($validation) ? $hasWarnings : false,
 			'uploaded' => $uploaded,
 			'active' => 0
 		));

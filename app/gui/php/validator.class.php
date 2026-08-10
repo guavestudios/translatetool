@@ -199,20 +199,23 @@ class Validator
 	}
 
 	/**
-	 * Checks if any values in the data are empty, that is if only the keys but no
-	 * values are provided.
+	 * Checks if any language cells in the data are empty. Empty cells are skipped
+	 * during import (they do not overwrite existing values) and are reported as
+	 * warnings rather than blocking errors.
 	 *
-	 * @param  Array	$configLang   Contains all languages that are defined in the config.
-	 * @param  Array	$row          Contains all data of the row to check on empty values.
-	 * @param  Array	$critEmptyVal Contains the error-messages (if any) when values
-	 *                              are empty.
+	 * Uses strict empty-string comparison so that "0" remains a valid translation.
+	 *
+	 * @param  Array	$configLang    Contains all languages that are defined in the config.
+	 * @param  Array	$row           Contains all data of the row to check on empty values.
+	 * @param  Array	$warnEmptyVal  Contains the warning messages (if any) when values
+	 *                               are empty.
 	 */
-	public static function checkEmptyValuesInData($configLang, $row, &$critEmptyVal)
+	public static function checkEmptyValuesInData($configLang, $row, &$warnEmptyVal)
 	{
 		foreach ($configLang as $l) {
-			if (isset($row[$l]) && empty($row[$l])) {
-				$rowInfo = isset($row['row']) ? ' (row ' . $row['row'] . ')' : '';
-				$critEmptyVal[] = '"' . $row['key'] . '" [' . $l . ']' . $rowInfo;
+			if (isset($row[$l]) && $row[$l] === '') {
+				$rowInfo = isset($row['row']) ? ' on row ' . $row['row'] : '';
+				$warnEmptyVal[] = 'Key "' . $row['key'] . '"' . $rowInfo . ' for language "' . $l . '" is empty and will be skipped.';
 			}
 		}
 	}
@@ -274,8 +277,8 @@ class Validator
 		if (!$importValuesInDataNotInDb) {
 			$inDataNotInDb = array_diff($dataKeys, $dbKeys);
 			$inDataNotInDb = array_diff($inDataNotInDb, $invalidFormat);
-			if (count($inDataNotInDb) > 0) {
-				$critInDataNotInDb[] = 'The following keys are provided in the CSV but not found in the DB: <br>' . implode('<br>', $inDataNotInDb);
+			foreach ($inDataNotInDb as $key) {
+				$critInDataNotInDb[] = 'Key "' . $key . '" is provided in the CSV but not found in the DB.';
 			}
 		}
 	}
@@ -298,23 +301,6 @@ class Validator
 			$dbDataIndexed[$v['id']] = $v;
 		}
 		return $dbDataIndexed;
-	}
-
-	/**
-	 * Compares the two passed arrays, finds all values that are found only in the first
-	 * one and returns an array with containing the information about the values
-	 * that are found only in the first array.
-	 *
-	 * @param  Array	$dbKeys							Contains all Keys found in the DB.
-	 * @param  Array	$dataKeys						Contains all Keys found in the data.
-	 * @param	Array	$warnInDbNotInData	Contains warnings if any are present.
-	 */
-	public static function checkInDbNotInData($dbKeys, $dataKeys, &$warnInDbNotInData)
-	{
-		$inDbNotInData = array_diff($dbKeys, $dataKeys);
-		if (count($inDbNotInData) > 0) {
-			$warnInDbNotInData[] = 'WARNING: The following keys are stored in the DB but not provided in the CSV: <br>' . implode('<br>', $inDbNotInData);
-		}
 	}
 
 	/**
@@ -452,7 +438,7 @@ class Validator
 
 		foreach ($csvData as $row) {
 			foreach (\config::get('languages') as $lang) {
-				if (isset($row[$lang]) && !empty($row[$lang])) {
+				if (isset($row[$lang]) && $row[$lang] !== '') {
 					$comparison = self::checkValueMatch($row['key'], $lang, $row[$lang], $dbDataIndexed);
 					$results[$comparison['status']][] = array_merge($comparison, array(
 						'key' => $row['key'],

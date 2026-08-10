@@ -12,9 +12,8 @@
 08 invalidFormatErrors  - Invalid key format - space in key-name
 09 invalidFormatErrors  - Invalid key format - no dot in key-name
 10 invalidFormatErrors  - Invalid key format - specialchars in key-name
-11 emptyValueErrors     - Empty values in csv
 12 inCsvNotInDbErrors   - Value only in csv not in DB
 
 ### WARNING
-20 inDbNotInCsvWarning        - Value in db but not in csv
+11 emptyValueWarning          - Empty values in csv (warning; cells skipped)
 21 moreLangInConfigWarning    - More langs in config defined than in csv provided
