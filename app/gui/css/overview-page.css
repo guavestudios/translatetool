@@ -49,7 +49,7 @@
 }
 
 .add-key-section {
-	position: sticky;
+	position: sticky; 
 	top: 0;
 	grid-column: 1/-1;
 	background: var(--c-base-dark);
@@ -58,6 +58,7 @@
 	grid-template-columns: subgrid;
 	border-bottom: 3px solid var(--c-border);
 	margin-inline: var(--spacing-md);
+	padding-top: var(--spacing-sm);
 
 	.trans-item {
 		border: none;

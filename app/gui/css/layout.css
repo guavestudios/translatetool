@@ -1,5 +1,6 @@
 #wrapper {
 	margin: 0 auto;
+	height: 100svh;
 	max-height: 100svh;
 	display: grid;
 	grid-template-rows: auto 1fr;
