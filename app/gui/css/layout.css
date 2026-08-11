@@ -1,8 +1,9 @@
 #wrapper {
 	margin: 0 auto;
-	min-height: 100svh;
+	max-height: 100svh;
 	display: grid;
 	grid-template-rows: auto 1fr;
+	overflow: hidden;
 }
 
 #wrapper.centered {
@@ -40,10 +41,10 @@
 	display: grid;
 	grid-template-columns: 250px 1fr;
 	gap: var(--spacing-md);
-	padding-bottom: var(--spacing-lg);
-	align-items: start;
+	align-items: stretch;
 	margin-inline: var(--spacing-md);
-
+	margin-bottom: var(--spacing-md);
+	overflow: hidden;
 
 	aside {
 		padding-block: var(--spacing-md);
@@ -52,13 +53,19 @@
 		border-radius: var(--border-radius);
 		position: sticky;
 		top: var(--spacing-md);
+		overflow: hidden auto;
+		height: 100%;
+	}
+
+	&:not(:has(.keyform)) .list-container {
+		padding: var(--spacing-md);
 	}
 }
 
 .list-container {
 	background: var(--c-base-dark);
 	border-radius: var(--border-radius);
-	padding: var(--spacing-md);
+	overflow: hidden auto;
 }
 
 .login-popup {
