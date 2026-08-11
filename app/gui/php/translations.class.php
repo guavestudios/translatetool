@@ -72,6 +72,80 @@ class translations
 		}
 	}
 
+	/**
+	 * Reparent leaf translation keys (all language rows) to a new folder.
+	 * All-or-nothing: if any key name already exists under the target, nothing is moved.
+	 *
+	 * @param array $ids Row ids (any language row for each key is enough)
+	 * @param int $newParentId Target folder id (0 = root)
+	 * @return array{ok: bool, conflicts: string[], error?: string}
+	 */
+	public static function moveKeys(array $ids, $newParentId)
+	{
+		$newParentId = (int) $newParentId;
+
+		if ($newParentId !== 0) {
+			$folder = self::getOne($newParentId);
+			if (!$folder || $folder['value'] !== null) {
+				return array('ok' => false, 'conflicts' => array(), 'error' => 'invalid_parent');
+			}
+		}
+
+		$toMove = array();
+		foreach ($ids as $id) {
+			if (!is_numeric($id)) {
+				continue;
+			}
+			$row = self::getOne((int) $id);
+			if (!$row || !isset($row['key']) || $row['value'] === null) {
+				continue;
+			}
+			$oldParentId = (int) $row['parent_id'];
+			if ($oldParentId === $newParentId) {
+				continue;
+			}
+			$pairKey = $oldParentId . "\0" . $row['key'];
+			$toMove[$pairKey] = array(
+				'key' => $row['key'],
+				'parent_id' => $oldParentId
+			);
+		}
+
+		if (empty($toMove)) {
+			return array('ok' => true, 'conflicts' => array());
+		}
+
+		$conflicts = array();
+		foreach ($toMove as $item) {
+			$escapedKey = self::getSql()->escapeString($item['key']);
+			$existing = self::get(
+				array('id', 'key'),
+				array(),
+				"parent_id = {$newParentId} AND key = '{$escapedKey}'"
+			);
+			if (!empty($existing)) {
+				$conflicts[] = $item['key'];
+			}
+		}
+		$conflicts = array_values(array_unique($conflicts));
+		if (!empty($conflicts)) {
+			return array('ok' => false, 'conflicts' => $conflicts);
+		}
+
+		foreach ($toMove as $item) {
+			$escapedKey = self::getSql()->escapeString($item['key']);
+			$oldParentId = (int) $item['parent_id'];
+			self::qry("
+				UPDATE " . self::$translationTable . "
+				SET parent_id = {$newParentId}
+				WHERE key = '{$escapedKey}'
+				AND parent_id = {$oldParentId}
+			");
+		}
+
+		return array('ok' => true, 'conflicts' => array());
+	}
+
 	public static function deleteById($id)
 	{
 		if (!is_numeric($id)) {

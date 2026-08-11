@@ -43,6 +43,7 @@ Flight::route('/del/folder/@delId', array('controller', 'delFolder'));
 Flight::route('/export', array('controller', 'export'));
 Flight::route('/download', array('controller', 'downloadCSV'));
 Flight::route('POST /delete/multikeys', array('controller', 'deleteMultiKeys'));
+Flight::route('POST /move/multikeys', array('controller', 'moveMultiKeys'));
 Flight::route('/delete/@keyId/@active', array('controller', 'deleteKey'));
 
 Flight::route('/poll', array('controller', 'poll'));
@@ -165,10 +166,71 @@ class controller
 		echo json_encode(array('status' => true));
 	}
 
+	public static function moveMultiKeys()
+	{
+		self::mirror();
+		$keyIds = isset($_POST['keyIds']) ? $_POST['keyIds'] : array();
+		if (!is_array($keyIds)) {
+			$keyIds = array();
+		}
+
+		$sanitizedIds = array();
+		foreach ($keyIds as $id) {
+			if (is_numeric($id)) {
+				$sanitizedIds[] = (int) $id;
+			}
+		}
+		$sanitizedIds = array_values(array_unique($sanitizedIds));
+
+		$newParentId = isset($_POST['parent_id']) && is_numeric($_POST['parent_id'])
+			? (int) $_POST['parent_id']
+			: -1;
+
+		$availableParents = self::getAvailableFolderParents();
+		$allowedParentIds = array_map(function ($parent) {
+			return (int) $parent['id'];
+		}, $availableParents);
+
+		header('Content-Type: application/json');
+
+		if ($newParentId < 0 || !in_array($newParentId, $allowedParentIds, true)) {
+			echo json_encode(array('status' => false, 'error' => 'invalid_parent', 'conflicts' => array()));
+			return;
+		}
+
+		if (empty($sanitizedIds)) {
+			echo json_encode(array('status' => true, 'conflicts' => array()));
+			return;
+		}
+
+		$result = translations::moveKeys($sanitizedIds, $newParentId);
+		if (empty($result['ok'])) {
+			http_response_code(409);
+			echo json_encode(array(
+				'status' => false,
+				'conflicts' => isset($result['conflicts']) ? $result['conflicts'] : array(),
+				'error' => isset($result['error']) ? $result['error'] : 'conflict'
+			));
+			return;
+		}
+
+		echo json_encode(array('status' => true, 'conflicts' => array()));
+	}
+
 	public static function key($keyId)
 	{
 		$keys = translations::getValues($keyId);
-		self::render('overview', array('keys' => $keys, 'active' => $keyId));
+		$folderOptions = array_values(array_filter(
+			self::getAvailableFolderParents(),
+			function ($option) use ($keyId) {
+				return (int) $option['id'] !== (int) $keyId;
+			}
+		));
+		self::render('overview', array(
+			'keys' => $keys,
+			'active' => $keyId,
+			'folder_options' => $folderOptions
+		));
 	}
 
 	public static function saveKeys($keyId)

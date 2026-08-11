@@ -10,7 +10,7 @@
 	height: stretch;
 }
 
-.multi-delete-mode {
+.multi-bulk-mode {
 	.checkbox-container {
 		pointer-events: auto;
 		opacity: 1;
@@ -27,6 +27,12 @@
 
 	.trans-item .delete-key {
 		display: none;
+	}
+
+	.form-actions {
+		flex-wrap: wrap;
+		row-gap: var(--spacing-sm);
+		align-items: center;
 	}
 }
 
@@ -68,6 +74,48 @@
 	bottom: 0;
 	background: var(--c-base-dark);
 	padding: var(--spacing-md);
+}
+
+.bulk-actions-toolbar {
+	display: none;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--spacing-sm);
+	margin-left: auto;
+}
+
+.multi-bulk-mode .bulk-actions-toolbar {
+	display: flex;
+}
+
+.bulk-move-dropdown {
+	position: relative;
+}
+
+.bulk-move-panel {
+	position: absolute;
+	right: 0;
+	bottom: calc(100% + var(--spacing-sm));
+	min-width: 18rem;
+	padding: var(--spacing-md);
+	background: var(--c-base-dark);
+	border: 1px solid var(--c-border);
+	border-radius: var(--border-radius);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+	z-index: 200;
+}
+
+.bulk-move-panel .folder-edit-form {
+	margin-bottom: var(--spacing-md);
+}
+
+.bulk-move-panel .folder-edit-form-row {
+	grid-template-columns: max-content 1fr;
+}
+
+.bulk-move-panel select {
+	min-width: 12rem;
+	width: 100%;
 }
 
 .trans-item {

@@ -44,51 +44,144 @@ document.addEventListener('DOMContentLoaded', function () {
 		}
 	});
 
-	// Multi-delete mode logic
-	const multiDeleteBtn = document.getElementById('multiDeleteModeBtn');
-	const multiDeleteBtnText = multiDeleteBtn?.innerText;
+	// Bulk actions mode (delete + move)
+	const bulkActionsBtn = document.getElementById('bulkActionsModeBtn');
+	const bulkActionsBtnText = bulkActionsBtn?.innerText;
+	const bulkActionsToolbar = document.getElementById('bulkActionsToolbar');
 	const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
-	let multiDeleteMode = false;
+	const moveSelectedBtn = document.getElementById('moveSelectedBtn');
+	const confirmMoveBtn = document.getElementById('confirmMoveBtn');
+	const bulkMoveTarget = document.getElementById('bulkMoveTarget');
+	const bulkMovePanel = document.getElementById('bulkMovePanel');
+	const bulkMoveDropdown = document.getElementById('bulkMoveDropdown');
+	let bulkActionsMode = false;
 
-	if (multiDeleteBtn) {
-		multiDeleteBtn.addEventListener('click', function () {
-			multiDeleteMode = !multiDeleteMode;
-			document.documentElement.classList.toggle('multi-delete-mode', multiDeleteMode);
+	function getSelectedKeyItems() {
+		const checked = Array.from(document.querySelectorAll('.custom-checkbox:checked'));
+		const keyNames = [];
+		const ids = [];
+		checked.forEach(cb => {
+			const container = cb.closest('.trans-item');
+			if (!container) return;
+			keyNames.push(container.querySelector('.keyname-input-main')?.value || '');
+			const row = container.querySelector('.lang-row input[name="id[]"]');
+			if (row && row.value) {
+				ids.push(row.value);
+			}
+		});
+		return { keyNames, ids };
+	}
+
+	function setMovePanelOpen(open) {
+		if (!bulkMovePanel || !moveSelectedBtn) return;
+		bulkMovePanel.hidden = !open;
+		moveSelectedBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+	}
+
+	if (bulkActionsBtn && bulkActionsToolbar) {
+		bulkActionsBtn.addEventListener('click', function () {
+			bulkActionsMode = !bulkActionsMode;
+			document.documentElement.classList.toggle('multi-bulk-mode', bulkActionsMode);
 			document.querySelectorAll('.custom-checkbox').forEach(cb => {
 				cb.checked = false;
 			});
-			deleteSelectedBtn.style.display = multiDeleteMode ? '' : 'none';
-			multiDeleteBtn.textContent = multiDeleteMode ? 'Exit Bulk Delete' : multiDeleteBtnText;
+			setMovePanelOpen(false);
+			bulkActionsBtn.textContent = bulkActionsMode ? 'Exit bulk actions' : bulkActionsBtnText;
 		});
 
-		deleteSelectedBtn.addEventListener('click', function () {
-			const checked = Array.from(document.querySelectorAll('.custom-checkbox:checked'));
-			if (checked.length === 0) return;
-			const keyNames = checked.map(cb => {
-				const container = cb.closest('.trans-item');
-				return container ? (container.querySelector('.keyname-input-main')?.value || '') : '';
-			});
-			if (window.confirm('Möchtest du die folgenden Keys wirklich löschen?\n' + keyNames.join('\n'))) {
-				// Collect all first row ids for selected keys
-				const ids = checked.map(cb => {
-					const container = cb.closest('.trans-item');
-					const row = container.querySelector('.lang-row input[name="id[]"]');
-					return row ? row.value : null;
-				}).filter(Boolean);
-				if (ids.length > 0) {
-					// Batch delete via AJAX POST
-					fetch('delete/multikeys', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/x-www-form-urlencoded'
-						},
-						body: 'keyIds[]=' + ids.join('&keyIds[]=')
-					})
-						.then(() => window.location.reload())
-						.catch(() => window.location.reload());
+		if (deleteSelectedBtn) {
+			deleteSelectedBtn.addEventListener('click', function () {
+				setMovePanelOpen(false);
+				const { keyNames, ids } = getSelectedKeyItems();
+				if (ids.length === 0) return;
+				if (!window.confirm('Möchtest du die folgenden Keys wirklich löschen?\n' + keyNames.join('\n'))) {
+					return;
 				}
-			}
-		});
+				fetch('delete/multikeys', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded'
+					},
+					body: 'keyIds[]=' + ids.join('&keyIds[]=')
+				})
+					.then(() => window.location.reload())
+					.catch(() => window.location.reload());
+			});
+		}
+
+		if (moveSelectedBtn && bulkMovePanel && bulkMoveTarget && confirmMoveBtn) {
+			moveSelectedBtn.addEventListener('click', function () {
+				const { ids } = getSelectedKeyItems();
+				if (ids.length === 0) {
+					setMovePanelOpen(false);
+					return;
+				}
+				setMovePanelOpen(bulkMovePanel.hidden);
+				if (!bulkMovePanel.hidden) {
+					bulkMoveTarget.focus();
+				}
+			});
+
+			confirmMoveBtn.addEventListener('click', function () {
+				const { keyNames, ids } = getSelectedKeyItems();
+				if (ids.length === 0) {
+					setMovePanelOpen(false);
+					return;
+				}
+				const targetLabel = bulkMoveTarget.options[bulkMoveTarget.selectedIndex]?.text || '';
+				if (!window.confirm(
+					'Möchtest du die folgenden Keys nach "' + targetLabel + '" verschieben?\n' + keyNames.join('\n')
+				)) {
+					return;
+				}
+				const body = 'parent_id=' + encodeURIComponent(bulkMoveTarget.value)
+					+ '&keyIds[]=' + ids.join('&keyIds[]=');
+				fetch('move/multikeys', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded'
+					},
+					body: body
+				})
+					.then(async (response) => {
+						let data = null;
+						try {
+							data = await response.json();
+						} catch (e) {
+							data = null;
+						}
+						if (response.ok && data && data.status) {
+							window.location.reload();
+							return;
+						}
+						const conflicts = data && Array.isArray(data.conflicts) ? data.conflicts : [];
+						if (conflicts.length > 0) {
+							window.alert(
+								'Verschieben abgebrochen. Diese Keys existieren bereits im Zielordner:\n'
+								+ conflicts.join('\n')
+							);
+							return;
+						}
+						window.alert('Verschieben fehlgeschlagen.');
+					})
+					.catch(() => {
+						window.alert('Verschieben fehlgeschlagen.');
+					});
+			});
+
+			document.addEventListener('click', function (event) {
+				if (!bulkMoveDropdown || bulkMovePanel.hidden) return;
+				if (!bulkMoveDropdown.contains(event.target)) {
+					setMovePanelOpen(false);
+				}
+			});
+
+			document.addEventListener('keydown', function (event) {
+				if (event.key === 'Escape') {
+					setMovePanelOpen(false);
+				}
+			});
+		}
 	}
 
 	// Save all changes with Control + S

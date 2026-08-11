@@ -60,11 +60,35 @@
 			<?php endforeach; ?>
 			<div class="form-actions">
 				<input type="submit" value="Save Changes (Cmd/Ctrl + S)" class="save-changes-btn btn btn--primary">
-				<button class="btn" type="button" id="multiDeleteModeBtn">Bulk Delete</button>
-				<button class="btn btn--error" type="button" id="deleteSelectedBtn" style="display:none">
-					<i class="ph ph-trash"></i>
-					Delete selected
-				</button>
+				<button class="btn" type="button" id="bulkActionsModeBtn">Bulk actions</button>
+				<div class="bulk-actions-toolbar" id="bulkActionsToolbar">
+					<button class="btn btn--error" type="button" id="deleteSelectedBtn">
+						<i class="ph ph-trash"></i>
+						Delete selected
+					</button>
+					<div class="bulk-move-dropdown" id="bulkMoveDropdown">
+						<button class="btn btn--primary" type="button" id="moveSelectedBtn" aria-expanded="false" aria-controls="bulkMovePanel">
+							<i class="ph ph-arrow-right"></i>
+							Move selected
+						</button>
+						<div class="bulk-move-panel" id="bulkMovePanel" hidden>
+							<div class="folder-edit-form">
+								<div class="folder-edit-form-row">
+									<label for="bulkMoveTarget">Parent folder</label>
+									<select id="bulkMoveTarget" name="bulk_move_target">
+										<?php
+										$folderOptions = isset($folder_options) ? $folder_options : array(array('id' => 0, 'label' => 'Root'));
+										foreach ($folderOptions as $option):
+											?>
+											<option value="<?= (int) $option['id'] ?>"><?= htmlspecialchars($option['label']) ?></option>
+										<?php endforeach; ?>
+									</select>
+								</div>
+							</div>
+							<button class="btn btn--primary" type="button" id="confirmMoveBtn">Move</button>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</form>
