@@ -196,37 +196,36 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 	}
 
-	// Add new key row on Enter in add-key-section
+	// Add another blank key form on Enter in the add-key section.
+	// Textareas never accept newlines, so Enter there means the same as in inputs:
+	// stage the current row and start the next one (submit still via Add Key / Cmd+S).
 	const addKeySection = document.querySelector('.add-key-section');
 	if (addKeySection) {
 		addKeySection.addEventListener('keydown', function (e) {
-			if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
-				console.log('Adding new key row');
-				e.preventDefault();
-				const transItem = addKeySection.querySelector('.trans-item');
-				const clone = transItem.cloneNode(true);
-				
-				// Remove the add-key-actions button from the clone
-				const addKeyActions = clone.querySelector('.add-key-actions');
-				if (addKeyActions) {
-					addKeyActions.remove();
-				}
-				
-				function resetInputs(element) {
-					const allInputs = element.querySelectorAll('input[type="text"]');
-					allInputs.forEach(el => { el.value = ''; });
-				}
-				resetInputs(clone);
-				
-				// Insert the clone before the original trans-item (which has the button)
-				transItem.parentNode.insertBefore(clone, transItem);
-				
-				const mainKeyInput = clone.querySelector('.keyname-input-main');
-				const syncInputs = clone.querySelectorAll('.sync-key');
-				syncMainWithSubInputs(mainKeyInput, syncInputs);
-				if (mainKeyInput) {
-					mainKeyInput.focus();
-				}
+			if (e.key !== 'Enter') return;
+			if (e.target.matches('input[type="submit"], button')) return;
+			if (!e.target.matches('input, textarea')) return;
+
+			e.preventDefault();
+			const transItem = addKeySection.querySelector('.trans-item');
+			const clone = transItem.cloneNode(true);
+
+			const addKeyActions = clone.querySelector('.add-key-actions');
+			if (addKeyActions) {
+				addKeyActions.remove();
+			}
+
+			clone.querySelectorAll('input[type="text"], textarea').forEach(function (el) {
+				el.value = '';
+			});
+
+			transItem.parentNode.insertBefore(clone, transItem);
+
+			const mainKeyInput = clone.querySelector('.keyname-input-main');
+			const syncInputs = clone.querySelectorAll('.sync-key');
+			syncMainWithSubInputs(mainKeyInput, syncInputs);
+			if (mainKeyInput) {
+				mainKeyInput.focus();
 			}
 		});
 	}
